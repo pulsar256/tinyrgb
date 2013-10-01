@@ -3,7 +3,7 @@ TinyRGB
 
 ##Abstract
 
-TinyRGB is a small learning project of mine. The goal is to replace remote controlled drivers of cheap RGB strips
+TinyRGB is a small learning project of mine. The goal is to replace / provide remote controlled drivers of RGB strips
 by a small Bluetooth-Enabled controller and driver. 
 
 ##Design Considerations
