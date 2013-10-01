@@ -11,7 +11,7 @@ The board layout has been restricted to 5x5cm so you can get your PCBs produced 
 very little investment. The ATTiny4313 microcontroller has been chosen with the Arduino-Community in mind. While 
 this chip is not compatible with your Arduino-IDE per se, it is very closely related to it and should make it 
 a little bit more accessible. The HC-05 Bluetooth module used is one of the most popular ones across the hacker communities
-and can be sourced for few dollars from eBay. 
+and can be sourced for few Dollar/Euro from eBay. 
 
 ##Current Status 
 ###Hardware
