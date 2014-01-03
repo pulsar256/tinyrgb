@@ -33,12 +33,12 @@
 const char* response_ok;
 const char* response_err;
 
-HsvColor	hsv; // current hsv values (in MODE_FADE_HSV)
-RgbColor    oRgb; // offset values for rgb, cast to int8_t before using
-RgbColor 	rgb; // current rgb values (in MODE_FADE_RANDOM_RGB)
-RgbColor 	tRgb; // target rgb values (for MODE_FADE_RANDOM_RGB)
-RgbColor	mRgb; // maximum / clipping values
-uint8_t		white; // white level, unsupported by the current firmware.
+HsvColor hsv; // current hsv values (in MODE_FADE_HSV)
+RgbColor oRgb; // offset values for rgb, cast to int8_t before using
+RgbColor rgb; // current rgb values (in MODE_FADE_RANDOM_RGB)
+RgbColor tRgb; // target rgb values (for MODE_FADE_RANDOM_RGB)
+RgbColor mRgb; // maximum / clipping values
+uint8_t  white; // white level, unsupported by the current firmware.
 
 uint8_t mode = MODE_FADE_RANDOM_RGB;
 uint8_t wait = FADE_WAIT;
@@ -68,7 +68,7 @@ void dumpRgbColorToSerial(RgbColor* color)
 * Command Syntax:
 * "SRGB:RRRGGGBBB"      set r / g / b values, implicit change to mode 002 - fixed RGB.
 * "SW:WWW"              set white level (unsupported by the current hardware)
-* "SO:±RR±GG±BB"        set offset r / g / b for RGB Fade Mode (+/-99)
+* "SO:ï¿½RRï¿½GGï¿½BB"        set offset r / g / b for RGB Fade Mode (+/-99)
 * "SM:RRRGGGBBB"        set maximum r / g / b for RGB Fade Mode
 * "SSV:SSSVVV"          set SV for HSV Fade mode
 * "SMD:MMM"             set mode (001 - random rgb fade, 002 - fixed RGB, 003 - HSV Fade (buggy))
