@@ -18,7 +18,7 @@ and can be sourced for few Dollar/Euro from eBay.
 The TinyRGB Firmware supports 3 basic modes: 
 
 - Random RGB Fade Mode
-- Buggy HSV Fader
+- Buggy (Jitter) HSV Fader Mode 
 - Fixed RGB Mode
 
 The modes can be configured using a simple and compact serial protocol which makes some sacrifices
@@ -38,6 +38,8 @@ The implementation supports the following commands sent via a serial modem link 
 "help"                help screen.
 ```
 
+Setting all HSV registers is not exposed via remote API yet due to bugs in the float-less implementation of the HSV -> RGB algorithm. The ATTiny2313 family does not have a FPU unit and SoftFPU is out of question considering the limited resources on the chip. Thus, the conversion from HSV to RGB should take place on the controller side (for instance an mobile application). The HSV support is likely to be dropped completely and replaced by a RGB colorwheel scroller. 
+
 ##Current Status 
 ###Hardware
 
@@ -50,7 +52,7 @@ The hardware can be considered to be beta at best. Current issues are:
  
 ###Firmware
 
-The firmware is developed using the AVR-GCC tool chain and is work in progress:
+The firmware is developed using the AVR-GCC tool chain and is somewhere between alpha and beta stages. 
 
 - [x] Provide RGB / HSV methods to control the RGB Values
 - [x] RGB fading / demo mode 
@@ -58,8 +60,8 @@ The firmware is developed using the AVR-GCC tool chain and is work in progress:
 - [x] Serial protocol specification to control and query the RGB values / modes.
 - [x] Serial protocol implementation
 - [x] (re)store last state from/in eeprom
-- [ ] Fix HSV converter, behaves wonky in HSV fade mode with SV values other than 254/255
+- [ ] Fix HSV converter, behaves wonky in HSV fade mode with SV values other than 254/255 (unlikely)
 - [ ] Provide unix makefiles and integration with avrdude
-- [ ] try to improve power consumption in pairing mode, 7805 regulator will be running quite otherwise.
+- [ ] try to improve power consumption in pairing mode, 7805 regulator will be running quite hot otherwise.
 
 
