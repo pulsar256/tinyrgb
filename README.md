@@ -25,7 +25,7 @@ The modes can be configured using a simple and compact serial protocol which mak
 in order to maintain "human" compatibility while being designed to be remote controlled by a rich
 GUI application. 
 
-The Implemenation supports the following commands sent via a serial modem link (8 9600 8n1 None):
+The implementation supports the following commands sent via a serial modem link (8 9600 8n1 None):
 ```
 "SRGB:RRRGGGBBB"      set r / g / b values, implicit change to mode 002 - fixed RGB.
 "SW:WWW"              set white level (unsupported by the current hardware)
@@ -50,7 +50,7 @@ The hardware can be considered to be beta at best. Current issues are:
  
 ###Firmware
 
-The firmware is developed using the AVR-GCC toolchain and is work in progress:
+The firmware is developed using the AVR-GCC tool chain and is work in progress:
 
 - [x] Provide RGB / HSV methods to control the RGB Values
 - [x] RGB fading / demo mode 
@@ -58,7 +58,7 @@ The firmware is developed using the AVR-GCC toolchain and is work in progress:
 - [x] Serial protocol specification to control and query the RGB values / modes.
 - [x] Serial protocol implementation
 - [x] (re)store last state from/in eeprom
-- [ ] Fix HSV converter, behaves wonky in hsv fade mode with SV values other than 254/255
+- [ ] Fix HSV converter, behaves wonky in HSV fade mode with SV values other than 254/255
 - [ ] Provide unix makefiles and integration with avrdude
 - [ ] try to improve power consumption in pairing mode, 7805 regulator will be running quite otherwise.
 
