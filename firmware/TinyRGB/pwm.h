@@ -14,6 +14,7 @@ void initPwm(void)
 {
 	// set pwm pins to output
 	DDRB |= (1 << PB2) | (1 << PB3) | (1 << PB4);
+	DDRD |= (1 << PD5);
 	
 	// setup timer 0
 	// fast pwm mode 
@@ -43,5 +44,8 @@ void setRgb(uint8_t r, uint8_t g, uint8_t b)
 	REG_GRN = 255-g;
 }
 
+void setWhite(uint8_t w){
+	REG_WHI = 255-w;
+}
 
 #endif /* RGB_H_ */
