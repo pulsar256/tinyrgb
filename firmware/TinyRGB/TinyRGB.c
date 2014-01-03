@@ -189,7 +189,7 @@ void serialBufferHandler(char* commandBuffer)
 	if (!processed) bufferCursor = strstr( commandBuffer, "help" );
 	if (bufferCursor != NULL)
 	{
-		writePgmStringToSerial(PSTR("\r\nCheck github.com/pulsar256/tinyrgb for protocol specification. No more space left on chip\r\n"));
+		writePgmStringToSerial(PSTR("\r\nCheck github.com/pulsar256/tinyrgb for protocol specification.\r\nSpace on chip is too low to include full documentation.\r\n"));
 		processed = true;
 		bufferCursor = NULL;
 	}

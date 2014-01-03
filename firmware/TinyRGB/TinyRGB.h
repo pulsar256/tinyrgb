@@ -34,7 +34,7 @@
 #define MODE_FADE_HSV			3
 #define FADE_WAIT				100
 #define LOCAL_ECHO				1
-#define BLINK_CONFIRM
+//#define BLINK_CONFIRM
 #define	EEPStart 0x10
 
 

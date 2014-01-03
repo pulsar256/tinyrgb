@@ -37,7 +37,7 @@ void initSerial(void)
 	UBRRH = (uint8_t) (UART_BAUD_CALC(UART_BAUD_RATE,F_CPU)>>8);
 	UBRRL = (uint8_t) (UART_BAUD_CALC(UART_BAUD_RATE,F_CPU));
 	
-	trgbser_prompt = PSTR("\r\n< RECEIVED \r\n");
+	trgbser_prompt = PSTR("\r\n");
 }
 
 void writeCharToSerial(unsigned char c)
@@ -88,7 +88,7 @@ ISR(USART_RX_vect){
 	if ((bufferPos >= (sizeof(commandBuffer)-1)) || ((chrRead == '\n' || chrRead == '\r'))) 
 	{
 		bufferPos = 0;
-		// writePgmStringToSerial(trgbser_prompt);
+		writePgmStringToSerial(trgbser_prompt);
 		bufferReady = true;
 		trgbser_callback(commandBuffer);
 	}			
