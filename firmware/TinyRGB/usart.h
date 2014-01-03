@@ -12,7 +12,7 @@
 #include<stdbool.h>
 
 
-typedef void (*buffer_ready_callback)(void);
+typedef void (*buffer_ready_callback)(char* commandBuffer);
 void trgbser_def_cb(){}
 buffer_ready_callback trgbser_callback = trgbser_def_cb;
 
@@ -58,6 +58,11 @@ void writeStringToSerial(char *str)
 	while (*str != 0x00) writeCharToSerial(*str++);
 }
 
+void writeNewLine()
+{
+	writeStringToSerial("\r\n");
+}
+
 signed char readSerialChar( void )
 {
 	// UCSRA – USART Control and Status Register A
@@ -83,9 +88,9 @@ ISR(USART_RX_vect){
 	if ((bufferPos >= (sizeof(commandBuffer)-1)) || ((chrRead == '\n' || chrRead == '\r'))) 
 	{
 		bufferPos = 0;
-		writePgmStringToSerial(trgbser_prompt);
+		// writePgmStringToSerial(trgbser_prompt);
 		bufferReady = true;
-		trgbser_callback();
+		trgbser_callback(commandBuffer);
 	}			
 }
 

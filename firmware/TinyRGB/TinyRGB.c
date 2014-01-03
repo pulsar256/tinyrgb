@@ -11,10 +11,7 @@
  * 14: PB2 / OC0A -> Blue
  * 15: PB3 / OC1A -> Green
  * 16: PB4 / OC1B -> RED
- 
- todo: hack: 4th white channel to be controlled by "set value" commands but not via hsv / effect model.
- todo: protocol
- todo: save last state in eeprom, reload on boot.  
+ *  9: PD5 / OC0B -> White (unsupported by the current hardware design)
  \o/
  */ 
 
@@ -33,7 +30,8 @@
 #include "usart.h"
 #include "colors.h"
 
-const char* welcome;
+const char* response_ok;
+const char* response_err;
 
 HsvColor	hsv; // current hsv values (in MODE_FADE_HSV)
 RgbColor    oRgb; // offset values for rgb, cast to int8_t before using
@@ -45,10 +43,25 @@ uint8_t mode = MODE_FADE_RANDOM_RGB;
 uint8_t wait = FADE_WAIT;
 uint8_t currentWait = FADE_WAIT;
 
+void dumpRgbColorToSerial(RgbColor* color)
+{
+	char buffer[4];
+	itoa(color->r,buffer,10);
+	writeStringToSerial(buffer);
+	writeNewLine();
+	itoa(color->g,buffer,10);
+	writeStringToSerial(buffer);
+	writeNewLine();
+	itoa(color->b,buffer,10);
+	writeStringToSerial(buffer);
+	writeNewLine();
+}
+
+
 
 /*
- * Parses the command buffer (commandBuffer is directly accessed from usart.h) and
- * changes the current state accordingly.
+ * Parses the command buffer and changes the current state accordingly.
+ *
  * Command Syntax:
  * "SRGB:RRRGGGBBB"      set r / g / b values, implicit change to mode 002 - fixed RGB.
  * "SW:WWW"              set white level (unsupported by the current hardware)
@@ -57,26 +70,30 @@ uint8_t currentWait = FADE_WAIT;
  * "SSV:SSSVVV"          set SV for HSV Fade mode
  * "SMD:MMM"             set mode (001 - random rgb fade, 002 - fixed RGB, 003 - HSV Fade (buggy))
  * "SD:DDD"              set delay for fade modes.
- * "G:"                  get current rgb values and mode
+ * "status"              get current rgb values and mode
+ * "help"                explains the protocol.
  */
-void serialBufferHandler(void)
+void serialBufferHandler(char* commandBuffer)
 {
 	cli();
 	char *bufferCursor;
+	bool processed = false;
 	
-	// SET RGB
-	bufferCursor = strstr( commandBuffer, "SRGB:" );
+	if (!processed) bufferCursor = strstr( commandBuffer, "SRGB:" );
+	
 	if (bufferCursor != NULL)
 	{      
 		mode = MODE_FIXED;
 		bufferCursor = bufferCursor + 5;
 		rgb.r = parseNextInt(&bufferCursor);
 		rgb.g = parseNextInt(&bufferCursor);
-		rgb.b = parseNextInt(&bufferCursor);	
+		rgb.b = parseNextInt(&bufferCursor);
+		processed = true;
+		bufferCursor = NULL;
 	}
 	
 	// Set max RGB
-	bufferCursor = strstr( commandBuffer, "SM:" );
+	if (!processed) bufferCursor  = strstr( commandBuffer, "SM:" );
 	if (bufferCursor != NULL)
 	{
 		mode = MODE_FIXED;
@@ -84,10 +101,12 @@ void serialBufferHandler(void)
 		tRgb.r = parseNextInt(&bufferCursor);
 		tRgb.g = parseNextInt(&bufferCursor);
 		tRgb.b = parseNextInt(&bufferCursor);
+		processed = true;
+		bufferCursor = NULL;
 	}
 	
 	// Set RGB offset
-	bufferCursor = strstr( commandBuffer, "SO:" );
+	if (!processed) bufferCursor  = strstr( commandBuffer, "SO:" );
 	if (bufferCursor != NULL)
 	{
 		mode = MODE_FIXED;
@@ -95,41 +114,99 @@ void serialBufferHandler(void)
 		oRgb.r  = parseNextInt(&bufferCursor);
 		oRgb.g  = parseNextInt(&bufferCursor);
 		oRgb.b  = parseNextInt(&bufferCursor);
+		processed = true;
+		bufferCursor = NULL;
 	}
 	
 	// Set white level (unsupported by current hardware design)
-	bufferCursor = strstr( commandBuffer, "SW:" );
+	if (!processed) bufferCursor  = strstr( commandBuffer, "SW:" );
 	if (bufferCursor != NULL)
 	{
 		mode = MODE_FIXED;
 		bufferCursor = bufferCursor + 3;
 		setWhite(parseNextInt(&bufferCursor));
+		processed = true;
+		bufferCursor = NULL;
 	}
 	
 	// set delay / wait cycles between color changes.
-	bufferCursor = strstr( commandBuffer, "SD:" );
+	if (!processed) bufferCursor  = strstr( commandBuffer, "SD:" );
 	if (bufferCursor != NULL)
 	{
 		bufferCursor = bufferCursor + 3;
 		wait = parseNextInt(&bufferCursor);
+		processed = true;
+		bufferCursor = NULL;
 	}
 	
 	// Set S and V values of the HSV Register.
-	bufferCursor = strstr( commandBuffer, "SSV:" );
+	if (!processed) bufferCursor  = strstr( commandBuffer, "SSV:" );
 	if (bufferCursor != NULL)
 	{
 		bufferCursor = bufferCursor + 4;
 		hsv.s = parseNextInt(&bufferCursor);
 		hsv.v = parseNextInt(&bufferCursor);
+		processed = true;
+		bufferCursor = NULL;
 	}
 	
-	// Sets the mode
-	bufferCursor = strstr( commandBuffer, "SMD:" );
+	// Sets the delay
+	if (!processed) bufferCursor  = strstr( commandBuffer, "SMD:" );
 	if (bufferCursor != NULL)
 	{
 		bufferCursor = bufferCursor + 4;
 		mode = parseNextInt(&bufferCursor);
+		processed = true;
+		bufferCursor = NULL;
 	}
+	
+	// Dumps all status registers
+	if (!processed) bufferCursor = strstr( commandBuffer, "status" );
+	if (bufferCursor != NULL)
+	{
+		char buffer[4];
+		
+		writePgmStringToSerial(PSTR("#Mode: \r\n"));
+		itoa(mode,buffer,10);
+		writeStringToSerial(buffer);
+		writeNewLine();
+		
+		writePgmStringToSerial(PSTR("#Delay: \r\n"));
+		itoa(wait,buffer,10);
+		writeStringToSerial(buffer);
+		writeNewLine();
+		
+		writePgmStringToSerial(PSTR("#Current RGB Values:\r\n"));
+		dumpRgbColorToSerial(&rgb);		
+		writePgmStringToSerial(PSTR("#Current HSV Values:\r\n"));
+		dumpRgbColorToSerial((struct RgbColor *)&hsv); // hsv has same memory layout as rgb
+		writePgmStringToSerial(PSTR("#Current RGB Offset Values:\r\n"));
+		dumpRgbColorToSerial(&oRgb);		
+		writePgmStringToSerial(PSTR("#Current RGB Clipping Values:\r\n"));
+		dumpRgbColorToSerial(&mRgb);
+		processed = true;
+		bufferCursor = NULL;
+	}
+	
+	// Dumps all status registers
+	if (!processed) bufferCursor = strstr( commandBuffer, "help" );
+	if (bufferCursor != NULL)
+	{
+		writePgmStringToSerial(PSTR("\r\nCheck github.com/pulsar256/tinyrgb for protocol specification. No more space left on chip\r\n"));
+		processed = true;
+		bufferCursor = NULL;
+	}
+	
+	if (!processed)
+	{
+		writePgmStringToSerial(response_err);
+	}
+	else
+	{
+		writePgmStringToSerial(response_ok);
+		updateEEProm();
+	}
+	
 	
 	#ifdef BLINK_CONFIRM
 		setRgb(0,0,0);
@@ -139,38 +216,55 @@ void serialBufferHandler(void)
 		setRgb(0,0,0);
 		_delay_ms(10);
 	#endif
+	
 	sei();
 }
+
+
+void writeEEPromValue(int offset, uint8_t value)
+{
+	uint8_t* addr = (uint8_t*)(EEPStart + offset);
+	eeprom_update_byte(addr,value);
+}
+
+uint8_t readEEPromValue(int offset)
+{
+	uint8_t* addr = (uint8_t*)(EEPStart + offset);
+	return eeprom_read_byte(addr);
+}
+
 
 void updateEEProm()
 {
 	int c = 0;
-	EEPWriteByte(EEPStart + c++, mode);
-	EEPWriteByte(EEPStart + c++, rgb.r);	
-	EEPWriteByte(EEPStart + c++, rgb.g);	
-	EEPWriteByte(EEPStart + c++, rgb.b);	
-	EEPWriteByte(EEPStart + c++, hsv.h);
-	EEPWriteByte(EEPStart + c++, hsv.s);
-	EEPWriteByte(EEPStart + c++, hsv.v);
-	EEPWriteByte(EEPStart + c++, oRgb.r);
-	EEPWriteByte(EEPStart + c++, oRgb.g);
-	EEPWriteByte(EEPStart + c++, oRgb.b);
+	writeEEPromValue(c++, mode);
+	writeEEPromValue(c++, rgb.r);	
+	writeEEPromValue(c++, rgb.g);	
+	writeEEPromValue(c++, rgb.b);	
+	writeEEPromValue(c++, hsv.h);
+	writeEEPromValue(c++, hsv.s);
+	writeEEPromValue(c++, hsv.v);
+	writeEEPromValue(c++, oRgb.r);
+	writeEEPromValue(c++, oRgb.g);
+	writeEEPromValue(c++, oRgb.b);
+	writeEEPromValue(c++, wait);
 }
 
 void restoreFromEEProm()
 {
 	int c = 0;
-	mode = EEPReadByte(EEPStart + c++);
-	if (mode == 0) return;
-	rgb.r = EEPReadByte(EEPStart + c++); 	
-	rgb.g = EEPReadByte(EEPStart + c++); 
-	rgb.b = EEPReadByte(EEPStart + c++); 
-	hsv.h = EEPReadByte(EEPStart + c++); 
-	hsv.s = EEPReadByte(EEPStart + c++); 
-	hsv.v = EEPReadByte(EEPStart + c++); 
-	oRgb.r = EEPReadByte(EEPStart + c++);
-	oRgb.g = EEPReadByte(EEPStart + c++);
-	oRgb.b = EEPReadByte(EEPStart + c++);
+	mode = readEEPromValue(c++);
+	if (mode == 0) return; // state not saved yet.
+	rgb.r = readEEPromValue(c++);	
+	rgb.g = readEEPromValue(c++);
+	rgb.b = readEEPromValue(c++);
+	hsv.h = readEEPromValue(c++);
+	hsv.s = readEEPromValue(c++);
+	hsv.v = readEEPromValue(c++);
+	oRgb.r = readEEPromValue(c++);
+	oRgb.g = readEEPromValue(c++);
+	oRgb.b = readEEPromValue(c++);
+	wait = readEEPromValue(c++);
 }
 
 /*
@@ -189,14 +283,16 @@ int main(void)
 {
 	SLED_DDR = (1 << PIND6);
 	
-	welcome = PSTR("\f\aTiny RGB 1.0 by Paul Rogalinski\r\n\0");
+	response_ok = PSTR("\r\nOK\r\n");
+	response_err = PSTR("\r\nERR\r\n");
 
 	initSerial();
 	initPwm();
 	
-	writePgmStringToSerial(welcome);
+	writePgmStringToSerial(PSTR("\f\aTiny RGB , https://github.com/pulsar256/tinyrgb \r\nCompiled: " __DATE__ "\r\n"));
 	
 	setRgb(255,0,0);
+	restoreFromEEProm();
 	_delay_ms(1000);
 	
 	setRgb(0,255,0);
@@ -206,13 +302,16 @@ int main(void)
 	_delay_ms(1000);
 	
 	setRgb(0,0,0);
+	if (mode == 0)
+	{
+		mode = MODE_FADE_HSV;
+		hsv.s = 254;
+		hsv.v = 255;
+		mRgb.r = 255;
+		mRgb.g = 255;
+		mRgb.b = 255;	
+	}
 	
-	mode = MODE_FADE_HSV;
-	hsv.s = 254;
-	hsv.v = 255;
-	mRgb.r = 255;
-	mRgb.g = 255;
-	mRgb.b = 255;
 	
 	// our "main" loop is scheduled by timer1's overflow IRQ
 	// @20MHz system clock and a /64 timer pre-scaler the ISR will run at 610.3515625 Hz / every 1.639ms 
