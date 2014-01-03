@@ -1,9 +1,9 @@
 /*
- * usart.h
- *
- * Created: 15.09.2013 03:05:59
- *  Author: pulsar
- */ 
+* usart.h
+*
+* Created: 15.09.2013 03:05:59
+* Author: Paul Rogalinski, paul@paul.vc
+*/
 
 
 #ifndef USART_H_
@@ -30,8 +30,8 @@ void setCommandBufferCallback(buffer_ready_callback cb)
 void initSerial(void)
 {
 	UCSRC |= (1 << UCSZ0) | (1 << UCSZ1); // 1 Stop-Bit, 8 Bits
-	UCSRB = (1 << TXEN)  | (1 <<  RXEN); // enable rx/tx
-	UCSRB |= (1 << RXCIE); // Enable the USART Recieve Complete interrupt (USART_RXC)
+	UCSRB = (1 << TXEN)  | (1 <<  RXEN); // enable RX/TX
+	UCSRB |= (1 << RXCIE); // Enable the USART Receive Complete interrupt (USART_RXC)
 	
 	/* UBRRL and UBRRH – USART Baud Rate Registers */
 	UBRRH = (uint8_t) (UART_BAUD_CALC(UART_BAUD_RATE,F_CPU)>>8);
@@ -74,24 +74,24 @@ signed char readSerialChar( void )
 
 void waitForBuffer( void )
 {
-	while (!bufferReady);	
+	while (!bufferReady);
 	bufferReady = false;
 }
 
 
 ISR(USART_RX_vect){
 	char chrRead;
-	chrRead = UDR;  
+	chrRead = UDR;
 	commandBuffer[bufferPos++] = chrRead;
 	commandBuffer[bufferPos] = 0x00;
 	UDR = chrRead;
-	if ((bufferPos >= (sizeof(commandBuffer)-1)) || ((chrRead == '\n' || chrRead == '\r'))) 
+	if ((bufferPos >= (sizeof(commandBuffer)-1)) || ((chrRead == '\n' || chrRead == '\r')))
 	{
 		bufferPos = 0;
 		writePgmStringToSerial(trgbser_prompt);
 		bufferReady = true;
 		trgbser_callback(commandBuffer);
-	}			
+	}
 }
 
 #endif /* USART_H_ */

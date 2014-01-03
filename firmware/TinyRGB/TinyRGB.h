@@ -1,9 +1,9 @@
 /*
- * TinyRGB.h
- *
- * Created: 03.01.2014 02:34:44
- *  Author: pulsar
- */ 
+* TinyRGB.h
+*
+* Created: 03.01.2014 02:34:44
+* Author: Paul Rogalinski, paul@paul.vc
+*/
 
 
 #ifndef TINYRGB_H_
@@ -34,7 +34,8 @@
 #define MODE_FADE_HSV			3
 #define FADE_WAIT				100
 #define LOCAL_ECHO				1
-//#define BLINK_CONFIRM
+//#define ENABLE_BLINK_CONFIRM
+#define ENABLE_WHITECHANNEL
 #define	EEPStart 0x10
 
 
@@ -42,6 +43,5 @@ int parseNextInt(char** buffer);
 void updateEEProm();
 void restoreFromEEProm();
 void serialBufferHandler(char* commandBuffer);
-
 
 #endif /* TINYRGB_H_ */

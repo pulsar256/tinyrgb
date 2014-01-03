@@ -3,15 +3,15 @@ TinyRGB
 
 ##Abstract
 
-TinyRGB is a small learning project of mine. The goal is to replace / provide remote controlled drivers of RGB strips
-by a small Bluetooth-Enabled controller and driver. 
+TinyRGB is a small learning project of mine. The goal is to replace / provide remote controlled drivers of 
+RGB strips by a small Bluetooth-Enabled controller and driver. 
 
 ##Design Considerations
 The board layout has been restricted to 5x5cm so you can get your PCBs produced for instance by Seeedstudio for
 very little investment. The ATTiny4313 microcontroller has been chosen with the Arduino-Community in mind. While 
 this chip is not compatible with your Arduino-IDE per se, it is very closely related to it and should make it 
-a little bit more accessible. The HC-05 Bluetooth module used is one of the most popular ones across the hacker communities
-and can be sourced for few Dollar/Euro from eBay. 
+a little bit more accessible. The HC-05 Bluetooth module used is one of the most popular ones across the hacker 
+communities and can be sourced for few Dollar/Euro from eBay. 
 
 ##Protocol Specification
 
@@ -34,11 +34,19 @@ The implementation supports the following commands sent via a serial modem link 
 "SSV:SSSVVV"          set SV for HSV Fade mode
 "SMD:MMM"             set mode (001 - random rgb fade, 002 - fixed RGB, 003 - HSV Fade (buggy))
 "SD:DDD"              set delay for fade modes.
+"SAV:VVV"             enables (VVV > 0) or disables (VVV == 0) the eeprom autosave function.
 "status"              get current rgb values and mode
 "help"                help screen.
 ```
 
-Setting all HSV registers is not exposed via remote API yet due to bugs in the float-less implementation of the HSV -> RGB algorithm. The ATTiny2313 family does not have a FPU unit and SoftFPU is out of question considering the limited resources on the chip. Thus, the conversion from HSV to RGB should take place on the controller side (for instance an mobile application). The HSV support is likely to be dropped completely and replaced by a RGB colorwheel scroller. 
+Setting all HSV registers is not exposed via remote API yet due to bugs in the float-less implementation of the 
+HSV -> RGB algorithm. The ATTiny2313 family does not have a FPU unit and SoftFPU is out of question considering 
+the limited resources on the chip. Thus, the conversion from HSV to RGB should take place on the controller side 
+(for instance an mobile application). The HSV support is likely to be dropped completely and replaced by a 
+RGB colorwheel scroller. 
+
+If you want to implement a continuous color cycling or other effects on the controller side, disabling the eeprom 
+(via "SAV:000") is highly recommended to prevent the eeprom wearing. This mode is not persistent.
 
 ##Current Status 
 ###Hardware

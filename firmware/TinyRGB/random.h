@@ -1,20 +1,25 @@
 /*
- * random.h
- *
- * Created: 15.09.2013 03:02:10
- *  Author: pulsar
- */ 
+* random.h
+*
+* Created: 15.09.2013 03:02:10
+* Author: Paul Rogalinski, paul@paul.vc
+*/
 
 
 #ifndef RANDOM_H_
 #define RANDOM_H_g
 
-
+/*
+ * clamps an int value to a uint8_t value
+ */
 inline uint8_t clamp(int value)
 {
 	return value < 0 ? 0 : (value > 0xff ? 0xff : value);
 }
 
+/*
+ * gets the random seed based on the memory contents
+ */
 unsigned short getSeed()
 {
 	unsigned short seed = 0;
@@ -27,6 +32,10 @@ unsigned short getSeed()
 // @see http://en.wikipedia.org/wiki/Random_number_generation
 unsigned long m_w = 0;
 unsigned long m_z = 0;
+
+/*
+ * gets a random long value. A random seed will be obtained on first call
+ */
 unsigned long getRandom()
 {
 	if (m_z == 0) m_z = getSeed();
@@ -36,12 +45,15 @@ unsigned long getRandom()
 	return (m_z << 16) + m_w;
 }
 
+/*
+ * gets a random uint8_t value other than the current value
+ */
 uint8_t getNextRandom(uint8_t max,int offset, uint8_t current)
 {
-	int tmp;
+	uint8_t tmp;
 	do
 	{
-		tmp   = clamp(((getRandom() % max) + offset));
+		tmp = clamp(((getRandom() % max) + offset));
 	}
 	while (tmp ==  current);
 	return tmp;
