@@ -33,12 +33,12 @@
 const char* response_ok;
 const char* response_err;
 
-HsvColor	hsv; // current hsv values (in MODE_FADE_HSV)
-RgbColor    oRgb; // offset values for rgb, cast to int8_t before using
-RgbColor 	rgb; // current rgb values (in MODE_FADE_RANDOM_RGB)
-RgbColor 	tRgb; // target rgb values (for MODE_FADE_RANDOM_RGB)
-RgbColor	mRgb; // maximum / clipping values
-uint8_t		white; // white level, unsupported by the current firmware.
+HsvColor  hsv; // current hsv values (in MODE_FADE_HSV)
+RgbColor  oRgb; // offset values for rgb, cast to int8_t before using
+RgbColor  rgb; // current rgb values (in MODE_FADE_RANDOM_RGB)
+RgbColor  tRgb; // target rgb values (for MODE_FADE_RANDOM_RGB)
+RgbColor  mRgb; // maximum / clipping values
+uint8_t   white; // white level, unsupported by the current firmware.
 
 uint8_t mode = MODE_FADE_RANDOM_RGB;
 uint8_t wait = FADE_WAIT;
@@ -60,110 +60,99 @@ void dumpRgbColorToSerial(RgbColor* color)
 	writeNewLine();
 }
 
-
-
 /*
 * Parses the command buffer and changes the current state accordingly.
 *
 * Command Syntax:
-* "SRGB:RRRGGGBBB"      set r / g / b values, implicit change to mode 002 - fixed RGB.
-* "SW:WWW"              set white level (unsupported by the current hardware)
-* "SO:ï¿½RRï¿½GGï¿½BB"        set offset r / g / b for RGB Fade Mode (+/-99)
-* "SM:RRRGGGBBB"        set maximum r / g / b for RGB Fade Mode
-* "SSV:SSSVVV"          set SV for HSV Fade mode
-* "SMD:MMM"             set mode (001 - random rgb fade, 002 - fixed RGB, 003 - HSV Fade (buggy))
-* "SD:DDD"              set delay for fade modes.
-* "status"              get current rgb values and mode
-* "help"                explains the protocol.
+* "SRGB:RRRGGGBBB"   set r / g / b values, implicit change to mode 002 - fixed RGB.
+* "SW:WWW"           set white level (unsupported by the current hardware)
+* "SO:±RR±GG±BB"     set offset r / g / b for RGB Fade Mode (+/-99)
+* "SM:RRRGGGBBB"     set maximum r / g / b for RGB Fade Mode
+* "SSV:SSSVVV"       set SV for HSV Fade mode
+* "SMD:MMM"          set mode (001 - random rgb fade, 002 - fixed RGB, 003 - HSV Fade (buggy))
+* "SD:DDD"           set delay for fade modes.
+* "status"           get current rgb values and mode
+* "help"             explains the protocol.
 */
-void serialBufferHandler(char* commandBuffer)
+bool handleCommands(char* commandBuffer)
 {
-	cli();
 	char *bufferCursor;
-	bool processed = false;
 	
-	if (!processed) bufferCursor = strstr( commandBuffer, "SRGB:" );
+	bufferCursor = strstr( commandBuffer, "SRGB:" );
 	
 	if (bufferCursor != NULL)
 	{
 		mode = MODE_FIXED;
-		bufferCursor = bufferCursor + 5;
+		bufferCursor += 5;
 		rgb.r = parseNextInt(&bufferCursor);
 		rgb.g = parseNextInt(&bufferCursor);
 		rgb.b = parseNextInt(&bufferCursor);
-		processed = true;
-		bufferCursor = NULL;
+		return true;
 	}
 	
 	// Set max RGB
-	if (!processed) bufferCursor  = strstr( commandBuffer, "SM:" );
+	bufferCursor  = strstr( commandBuffer, "SM:" );
 	if (bufferCursor != NULL)
 	{
-		bufferCursor = bufferCursor + 3;
+		bufferCursor += 3;
 		mRgb.r = parseNextInt(&bufferCursor);
 		mRgb.g = parseNextInt(&bufferCursor);
 		mRgb.b = parseNextInt(&bufferCursor);
-		processed = true;
-		bufferCursor = NULL;
+		return true;
 	}
 	
 	// Set RGB offset
-	if (!processed) bufferCursor  = strstr( commandBuffer, "SO:" );
+	bufferCursor  = strstr( commandBuffer, "SO:" );
 	if (bufferCursor != NULL)
 	{
-		bufferCursor = bufferCursor + 3;
+		bufferCursor += 3;
 		oRgb.r  = parseNextInt(&bufferCursor);
 		oRgb.g  = parseNextInt(&bufferCursor);
 		oRgb.b  = parseNextInt(&bufferCursor);
-		processed = true;
-		bufferCursor = NULL;
+		return true;
 	}
 	
 	#ifdef ENABLE_WHITECHANNEL
 	// Set white level (unsupported by current hardware design)
-	if (!processed) bufferCursor  = strstr( commandBuffer, "SW:" );
+	bufferCursor  = strstr( commandBuffer, "SW:" );
 	if (bufferCursor != NULL)
 	{
-		bufferCursor = bufferCursor + 3;
+		bufferCursor += 3;
 		white = parseNextInt(&bufferCursor);
-		processed = true;
-		bufferCursor = NULL;
+		return true;
 	}
 	#endif
 	
 	// set delay / wait cycles between color changes.
-	if (!processed) bufferCursor  = strstr( commandBuffer, "SD:" );
+	bufferCursor  = strstr( commandBuffer, "SD:" );
 	if (bufferCursor != NULL)
 	{
-		bufferCursor = bufferCursor + 3;
+		bufferCursor += 3;
 		wait = parseNextInt(&bufferCursor);
-		processed = true;
-		bufferCursor = NULL;
+		return true;
 	}
 	
 	// Set S and V values of the HSV Register.
-	if (!processed) bufferCursor  = strstr( commandBuffer, "SSV:" );
+	bufferCursor  = strstr( commandBuffer, "SSV:" );
 	if (bufferCursor != NULL)
 	{
-		bufferCursor = bufferCursor + 4;
+		bufferCursor += 4;
 		hsv.s = parseNextInt(&bufferCursor);
 		hsv.v = parseNextInt(&bufferCursor);
-		processed = true;
-		bufferCursor = NULL;
+		return true;
 	}
 	
 	// Sets the delay
-	if (!processed) bufferCursor  = strstr( commandBuffer, "SMD:" );
+	bufferCursor  = strstr( commandBuffer, "SMD:" );
 	if (bufferCursor != NULL)
 	{
-		bufferCursor = bufferCursor + 4;
+		bufferCursor += 4;
 		mode = parseNextInt(&bufferCursor);
-		processed = true;
-		bufferCursor = NULL;
+		return true;
 	}
 	
 	// Dumps all status registers
-	if (!processed) bufferCursor = strstr( commandBuffer, "status" );
+	bufferCursor = strstr( commandBuffer, "status" );
 	if (bufferCursor != NULL)
 	{
 		char buffer[4];
@@ -209,32 +198,40 @@ void serialBufferHandler(char* commandBuffer)
 		writeNewLine();
 		dumpRgbColorToSerial(&mRgb);
 		
-		processed = true;
-		bufferCursor = NULL;
+		return true;
 	}
 	
 	// Dumps all status registers
-	if (!processed) bufferCursor = strstr( commandBuffer, "help" );
+	bufferCursor = strstr( commandBuffer, "help" );
 	if (bufferCursor != NULL)
 	{
 		writePgmStringToSerial(PSTR("\r\nCheck github.com/pulsar256/tinyrgb for protocol specification.\r\nSpace on chip is too low to include full documentation.\r\n"));
-		processed = true;
-		bufferCursor = NULL;
+		return true;
 	}
 	
-	// Enables (value > 0) / Disables (value == 0) the autosave function. 
-	if (!processed) bufferCursor  = strstr( commandBuffer, "SAV:" );
+	// Enables (value > 0) / Disables (value == 0) the autosave function.
+	bufferCursor  = strstr( commandBuffer, "SAV:" );
 	if (bufferCursor != NULL)
 	{
-		bufferCursor = bufferCursor + 4;
+		bufferCursor += 4;
 		uint8_t value =  parseNextInt(&bufferCursor);
 		if (value > 0) autosaveEnabled = true;
 		else autosaveEnabled = false;
-		processed = true;
-		bufferCursor = NULL;
+		return true;	
 	}
 	
-	if (!processed)
+	return false;	
+}
+
+/*
+ * Callback for the USART handler, executed each time the buffer is full or a 
+ * newline has been submitted.
+ */
+void serialBufferHandler(char* commandBuffer)
+{
+	cli();
+	
+	if (!handleCommands(commandBuffer))
 	{
 		writePgmStringToSerial(response_err);
 	}
@@ -246,6 +243,7 @@ void serialBufferHandler(char* commandBuffer)
 	
 	
 	#ifdef ENABLE_BLINK_CONFIRM
+	// "roger-beep", very anoying if you do realtime updates.
 	setRgb(0,0,0);
 	_delay_ms(10);
 	setRgb(0,255,0);

@@ -7,7 +7,7 @@
 
 
 #ifndef RANDOM_H_
-#define RANDOM_H_g
+#define RANDOM_H_
 
 /*
  * clamps an int value to a uint8_t value
