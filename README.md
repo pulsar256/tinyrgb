@@ -26,17 +26,17 @@ in order to maintain "human" compatibility while being designed to be remote con
 GUI application. 
 
 The Implemenation supports the following commands sent via a serial modem link (8 9600 8n1 None):
-
-- "SRGB:RRRGGGBBB"      set r / g / b values, implicit change to mode 002 - fixed RGB.
-- "SW:WWW"              set white level (unsupported by the current hardware)
-- "SO:±RR±GG±BB"        set offset r / g / b for RGB Fade Mode (+/-99)
-- "SM:RRRGGGBBB"        set maximum r / g / b for RGB Fade Mode
-- "SSV:SSSVVV"          set SV for HSV Fade mode
-- "SMD:MMM"             set mode (001 - random rgb fade, 002 - fixed RGB, 003 - HSV Fade (buggy))
-- "SD:DDD"              set delay for fade modes.
-- "status"              get current rgb values and mode
-- "help"                help screen.
-
+```
+"SRGB:RRRGGGBBB"      set r / g / b values, implicit change to mode 002 - fixed RGB.
+"SW:WWW"              set white level (unsupported by the current hardware)
+"SO:±RR±GG±BB"        set offset r / g / b for RGB Fade Mode (+/-99)
+"SM:RRRGGGBBB"        set maximum r / g / b for RGB Fade Mode
+"SSV:SSSVVV"          set SV for HSV Fade mode
+"SMD:MMM"             set mode (001 - random rgb fade, 002 - fixed RGB, 003 - HSV Fade (buggy))
+"SD:DDD"              set delay for fade modes.
+"status"              get current rgb values and mode
+"help"                help screen.
+```
 
 ##Current Status 
 ###Hardware
