@@ -33,12 +33,12 @@
 const char* response_ok;
 const char* response_err;
 
-HsvColor hsv; // current hsv values (in MODE_FADE_HSV)
-RgbColor oRgb; // offset values for rgb, cast to int8_t before using
-RgbColor rgb; // current rgb values (in MODE_FADE_RANDOM_RGB)
-RgbColor tRgb; // target rgb values (for MODE_FADE_RANDOM_RGB)
-RgbColor mRgb; // maximum / clipping values
-uint8_t  white; // white level, unsupported by the current firmware.
+HsvColor	hsv; // current hsv values (in MODE_FADE_HSV)
+RgbColor    oRgb; // offset values for rgb, cast to int8_t before using
+RgbColor 	rgb; // current rgb values (in MODE_FADE_RANDOM_RGB)
+RgbColor 	tRgb; // target rgb values (for MODE_FADE_RANDOM_RGB)
+RgbColor	mRgb; // maximum / clipping values
+uint8_t		white; // white level, unsupported by the current firmware.
 
 uint8_t mode = MODE_FADE_RANDOM_RGB;
 uint8_t wait = FADE_WAIT;
@@ -241,7 +241,7 @@ void serialBufferHandler(char* commandBuffer)
 	else
 	{
 		writePgmStringToSerial(response_ok);
-		updateEEProm();
+		if(autosaveEnabled) updateEEProm();
 	}
 	
 	
