@@ -289,7 +289,7 @@ int main(void)
 	initSerial();
 	initPwm();
 	
-	writePgmStringToSerial(PSTR("\f\aTiny RGB , https://github.com/pulsar256/tinyrgb \r\nCompiled: " __DATE__ "\r\n"));
+	writePgmStringToSerial(PSTR("\f\aTiny RGB 0.1, https://github.com/pulsar256/tinyrgb \r\nCompiled: " __DATE__ "\r\n"));
 	
 	setRgb(255,0,0);
 	restoreFromEEProm();
