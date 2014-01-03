@@ -138,9 +138,6 @@
     <Folder Include="vsix\" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="README.md">
-      <SubType>compile</SubType>
-    </None>
     <None Include="vsix\extension.xdkmanifest">
       <SubType>compile</SubType>
     </None>

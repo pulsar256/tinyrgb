@@ -96,11 +96,10 @@ void serialBufferHandler(char* commandBuffer)
 	if (!processed) bufferCursor  = strstr( commandBuffer, "SM:" );
 	if (bufferCursor != NULL)
 	{
-		mode = MODE_FIXED;
 		bufferCursor = bufferCursor + 3;
-		tRgb.r = parseNextInt(&bufferCursor);
-		tRgb.g = parseNextInt(&bufferCursor);
-		tRgb.b = parseNextInt(&bufferCursor);
+		mRgb.r = parseNextInt(&bufferCursor);
+		mRgb.g = parseNextInt(&bufferCursor);
+		mRgb.b = parseNextInt(&bufferCursor);
 		processed = true;
 		bufferCursor = NULL;
 	}
@@ -109,7 +108,6 @@ void serialBufferHandler(char* commandBuffer)
 	if (!processed) bufferCursor  = strstr( commandBuffer, "SO:" );
 	if (bufferCursor != NULL)
 	{
-		mode = MODE_FIXED;
 		bufferCursor = bufferCursor + 3;
 		oRgb.r  = parseNextInt(&bufferCursor);
 		oRgb.g  = parseNextInt(&bufferCursor);
@@ -122,7 +120,6 @@ void serialBufferHandler(char* commandBuffer)
 	if (!processed) bufferCursor  = strstr( commandBuffer, "SW:" );
 	if (bufferCursor != NULL)
 	{
-		mode = MODE_FIXED;
 		bufferCursor = bufferCursor + 3;
 		setWhite(parseNextInt(&bufferCursor));
 		processed = true;
@@ -248,6 +245,9 @@ void updateEEProm()
 	writeEEPromValue(c++, oRgb.g);
 	writeEEPromValue(c++, oRgb.b);
 	writeEEPromValue(c++, wait);
+	writeEEPromValue(c++, mRgb.r);
+	writeEEPromValue(c++, mRgb.g);
+	writeEEPromValue(c++, mRgb.b);
 }
 
 void restoreFromEEProm()
@@ -265,6 +265,9 @@ void restoreFromEEProm()
 	oRgb.g = readEEPromValue(c++);
 	oRgb.b = readEEPromValue(c++);
 	wait = readEEPromValue(c++);
+	mRgb.r = readEEPromValue(c++);
+	mRgb.g = readEEPromValue(c++);
+	mRgb.b = readEEPromValue(c++);
 }
 
 /*
