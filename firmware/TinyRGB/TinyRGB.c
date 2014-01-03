@@ -18,36 +18,13 @@
  \o/
  */ 
 
-#ifndef F_CPU
-	#define F_CPU 20000000UL     /* Set your clock speed here, mine is a 20 Mhz quartz*/
-#endif
-
-#define UART_BAUD_RATE 9600UL
-// @see 14.3.1 Internal Clock Generation – The Baud Rate Generator
-#define UART_BAUD_CALC(UART_BAUD_RATE,F_CPU) ((F_CPU)/((UART_BAUD_RATE)*16l)-1)
-
-#define BIT_SET(a,b) ((a) |= (1<<(b)))
-#define BIT_CLEAR(a,b) ((a) &= ~(1<<(b)))
-#define BIT_FLIP(a,b) ((a) ^= (1<<(b)))
-#define BIT_CHECK(a,b) ((a) & (1<<(b)))
-
-#define SLED_PORT				PORTD
-#define SLED_DDR				DDRD
-#define SLED_PIN				PIND6
-#define REG_RED					OCR1B
-#define REG_GRN					OCR1A
-#define REG_BLU					OCR0A
-#define REG_WHI					OCR0B
-#define MODE_FADE_RANDOM_RGB    1
-#define MODE_FIXED				2
-#define MODE_FADE_HSV			3
-#define FADE_WAIT				100
-#define LOCAL_ECHO				1;
+#include "TinyRGB.h"
 
 #include <avr/io.h>
 #include <util/delay.h>
 #include <avr/pgmspace.h>
 #include <avr/interrupt.h>
+#include <avr/eeprom.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -56,14 +33,10 @@
 #include "usart.h"
 #include "colors.h"
 
-int parseNextInt(char** buffer);
-
-
 const char* welcome;
 
-// RgbColor is unsigned (char), so we are use ints here.
-int     offsetRed = 0, offsetGreen = 0, offsetBlue = 0; // color offsets, can be negative. rgb output will always be clipped to 0..255
 HsvColor	hsv; // current hsv values (in MODE_FADE_HSV)
+RgbColor    oRgb; // offset values for rgb, cast to int8_t before using
 RgbColor 	rgb; // current rgb values (in MODE_FADE_RANDOM_RGB)
 RgbColor 	tRgb; // target rgb values (for MODE_FADE_RANDOM_RGB)
 RgbColor	mRgb; // maximum / clipping values
@@ -72,33 +45,26 @@ uint8_t mode = MODE_FADE_RANDOM_RGB;
 uint8_t wait = FADE_WAIT;
 uint8_t currentWait = FADE_WAIT;
 
+
+/*
+ * Parses the command buffer (commandBuffer is directly accessed from usart.h) and
+ * changes the current state accordingly.
+ * Command Syntax:
+ * "SRGB:RRRGGGBBB"      set r / g / b values, implicit change to mode 002 - fixed RGB.
+ * "SW:WWW"              set white level (unsupported by the current hardware)
+ * "SO:±RR±GG±BB"        set offset r / g / b for RGB Fade Mode (+/-99)
+ * "SM:RRRGGGBBB"        set maximum r / g / b for RGB Fade Mode
+ * "SSV:SSSVVV"          set SV for HSV Fade mode
+ * "SMD:MMM"             set mode (001 - random rgb fade, 002 - fixed RGB, 003 - HSV Fade (buggy))
+ * "SD:DDD"              set delay for fade modes.
+ * "G:"                  get current rgb values and mode
+ */
 void serialBufferHandler(void)
 {
 	cli();
-	setRgb(0,0,0);
-	_delay_ms(10);
-	setRgb(0,255,0);	
-	_delay_ms(100);
-	setRgb(0,0,0);
-	_delay_ms(10);
-	sei();
-	
-	
 	char *bufferCursor;
 	
-		
-	// "_______________\0"
-	// "SRGB:RRRGGGBBB\0" -> set r / g / b values
-	// "SW:WWW" set white level
-	// "SO:RRRGGGBBB" set offset r / g / b
-	// "SM:RRRGGGBBB" set maximum r / g / b
-		
-	// "SHSV:HHHSSSVVV\0"
-	// "SMD:MMM"
-	// MMM = 00: RGB Values
-	// MMM = 01: HSV Values
-	// "G\0" -> get current rgb values and mode
-	
+	// SET RGB
 	bufferCursor = strstr( commandBuffer, "SRGB:" );
 	if (bufferCursor != NULL)
 	{      
@@ -109,6 +75,7 @@ void serialBufferHandler(void)
 		rgb.b = parseNextInt(&bufferCursor);	
 	}
 	
+	// Set max RGB
 	bufferCursor = strstr( commandBuffer, "SM:" );
 	if (bufferCursor != NULL)
 	{
@@ -119,16 +86,18 @@ void serialBufferHandler(void)
 		tRgb.b = parseNextInt(&bufferCursor);
 	}
 	
+	// Set RGB offset
 	bufferCursor = strstr( commandBuffer, "SO:" );
 	if (bufferCursor != NULL)
 	{
 		mode = MODE_FIXED;
 		bufferCursor = bufferCursor + 3;
-		offsetRed    = parseNextInt(&bufferCursor);
-		offsetGreen  = parseNextInt(&bufferCursor);
-		offsetBlue   = parseNextInt(&bufferCursor);
+		oRgb.r  = parseNextInt(&bufferCursor);
+		oRgb.g  = parseNextInt(&bufferCursor);
+		oRgb.b  = parseNextInt(&bufferCursor);
 	}
 	
+	// Set white level (unsupported by current hardware design)
 	bufferCursor = strstr( commandBuffer, "SW:" );
 	if (bufferCursor != NULL)
 	{
@@ -136,8 +105,77 @@ void serialBufferHandler(void)
 		bufferCursor = bufferCursor + 3;
 		setWhite(parseNextInt(&bufferCursor));
 	}
+	
+	// set delay / wait cycles between color changes.
+	bufferCursor = strstr( commandBuffer, "SD:" );
+	if (bufferCursor != NULL)
+	{
+		bufferCursor = bufferCursor + 3;
+		wait = parseNextInt(&bufferCursor);
+	}
+	
+	// Set S and V values of the HSV Register.
+	bufferCursor = strstr( commandBuffer, "SSV:" );
+	if (bufferCursor != NULL)
+	{
+		bufferCursor = bufferCursor + 4;
+		hsv.s = parseNextInt(&bufferCursor);
+		hsv.v = parseNextInt(&bufferCursor);
+	}
+	
+	// Sets the mode
+	bufferCursor = strstr( commandBuffer, "SMD:" );
+	if (bufferCursor != NULL)
+	{
+		bufferCursor = bufferCursor + 4;
+		mode = parseNextInt(&bufferCursor);
+	}
+	
+	#ifdef BLINK_CONFIRM
+		setRgb(0,0,0);
+		_delay_ms(10);
+		setRgb(0,255,0);
+		_delay_ms(100);
+		setRgb(0,0,0);
+		_delay_ms(10);
+	#endif
+	sei();
 }
 
+void updateEEProm()
+{
+	int c = 0;
+	EEPWriteByte(EEPStart + c++, mode);
+	EEPWriteByte(EEPStart + c++, rgb.r);	
+	EEPWriteByte(EEPStart + c++, rgb.g);	
+	EEPWriteByte(EEPStart + c++, rgb.b);	
+	EEPWriteByte(EEPStart + c++, hsv.h);
+	EEPWriteByte(EEPStart + c++, hsv.s);
+	EEPWriteByte(EEPStart + c++, hsv.v);
+	EEPWriteByte(EEPStart + c++, oRgb.r);
+	EEPWriteByte(EEPStart + c++, oRgb.g);
+	EEPWriteByte(EEPStart + c++, oRgb.b);
+}
+
+void restoreFromEEProm()
+{
+	int c = 0;
+	mode = EEPReadByte(EEPStart + c++);
+	if (mode == 0) return;
+	rgb.r = EEPReadByte(EEPStart + c++); 	
+	rgb.g = EEPReadByte(EEPStart + c++); 
+	rgb.b = EEPReadByte(EEPStart + c++); 
+	hsv.h = EEPReadByte(EEPStart + c++); 
+	hsv.s = EEPReadByte(EEPStart + c++); 
+	hsv.v = EEPReadByte(EEPStart + c++); 
+	oRgb.r = EEPReadByte(EEPStart + c++);
+	oRgb.g = EEPReadByte(EEPStart + c++);
+	oRgb.b = EEPReadByte(EEPStart + c++);
+}
+
+/*
+ * Parses an integer value from a triple of chars. advances the pointer to the string afterwards
+ */
 int parseNextInt(char** buffer)
 {
 	char val[4];	
@@ -168,6 +206,7 @@ int main(void)
 	_delay_ms(1000);
 	
 	setRgb(0,0,0);
+	
 	mode = MODE_FADE_HSV;
 	hsv.s = 254;
 	hsv.v = 255;
@@ -193,9 +232,9 @@ ISR(TIMER1_OVF_vect)
 		currentWait = wait;
 		if (mode == MODE_FADE_RANDOM_RGB)
 		{
-			if (tRgb.r == rgb.r) tRgb.r = getNextRandom(mRgb.r, offsetRed, rgb.r);
-			if (tRgb.g == rgb.g) tRgb.g = getNextRandom(mRgb.g, offsetGreen, rgb.g);
-			if (tRgb.b == rgb.b) tRgb.b = getNextRandom(mRgb.b, offsetBlue, rgb.b);
+			if (tRgb.r == rgb.r) tRgb.r = getNextRandom(mRgb.r, (int8_t)oRgb.r, rgb.r);
+			if (tRgb.g == rgb.g) tRgb.g = getNextRandom(mRgb.g, (int8_t)oRgb.g, rgb.g);
+			if (tRgb.b == rgb.b) tRgb.b = getNextRandom(mRgb.b, (int8_t)oRgb.b, rgb.b);
 			rgb.r += (rgb.r < tRgb.r) ? 1 : -1;
 			rgb.g += (rgb.g < tRgb.g) ? 1 : -1;
 			rgb.b += (rgb.b < tRgb.b) ? 1 : -1;

@@ -23,7 +23,9 @@ typedef struct
 	unsigned char v;
 } HsvColor;
 
-
+/*
+ * this implementation has some flaws, expect the converted values to have some jitter when cycling through H 
+ */
 RgbColor hsvToRgb(HsvColor hsv){	
 	RgbColor rgb;
     unsigned char region, remainder, p, q, t;

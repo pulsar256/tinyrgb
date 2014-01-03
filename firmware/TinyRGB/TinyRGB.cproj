@@ -58,15 +58,15 @@
     <BootSegment>2</BootSegment>
     <AsfFrameworkConfig>
       <framework-data>
-  <options />
-  <configurations />
-  <files />
-  <documentation help="" />
-  <offline-documentation help="" />
-  <dependencies>
-    <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.5.0" />
-  </dependencies>
-</framework-data>
+        <options />
+        <configurations />
+        <files />
+        <documentation help="" />
+        <offline-documentation help="" />
+        <dependencies>
+          <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.5.0" />
+        </dependencies>
+      </framework-data>
     </AsfFrameworkConfig>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
@@ -126,6 +126,9 @@
     <Compile Include="TinyRGB.c">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="TinyRGB.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="usart.h">
       <SubType>compile</SubType>
     </Compile>
@@ -134,6 +137,9 @@
     <Folder Include="vsix\" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="README.md">
+      <SubType>compile</SubType>
+    </None>
     <None Include="vsix\extension.xdkmanifest">
       <SubType>compile</SubType>
     </None>

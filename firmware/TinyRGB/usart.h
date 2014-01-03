@@ -22,12 +22,10 @@ const char* trgbser_prompt;
 volatile bool bufferReady = false;
 
 
-
 void setCommandBufferCallback(buffer_ready_callback cb)
 {
 	trgbser_callback = cb;
 }
-
 
 void initSerial(void)
 {

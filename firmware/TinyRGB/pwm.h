@@ -14,7 +14,7 @@ void initPwm(void)
 {
 	// set pwm pins to output
 	DDRB |= (1 << PB2) | (1 << PB3) | (1 << PB4);
-	DDRD |= (1 << PD5);
+	DDRD |= (1 << PD5); // not supported by the current hardware. you can hook up an external driver (mosfet) to pin 9 to control a dedicated white channel.
 	
 	// setup timer 0
 	// fast pwm mode 
