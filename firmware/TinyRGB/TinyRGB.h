@@ -26,7 +26,7 @@
 #define MODE_FADE_HSV           3
 #define LOCAL_ECHO              1
 //#define ENABLE_BLINK_CONFIRM
-#define ENABLE_WHITECHANNEL
+//#define ENABLE_WHITECHANNEL
 #define	EEPStart                0x10
 
 

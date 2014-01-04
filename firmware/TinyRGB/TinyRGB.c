@@ -100,8 +100,8 @@ bool handleCommands(char* commandBuffer)
 {
 	char *bufferCursor;
 	
+	// Set RGB values and switch to MODE_FIXED (002)
 	bufferCursor = strstr( commandBuffer, "SRGB:" );
-	
 	if (bufferCursor != NULL)
 	{
 		mode = MODE_FIXED;
@@ -135,14 +135,14 @@ bool handleCommands(char* commandBuffer)
 	}
 	
 	#ifdef ENABLE_WHITECHANNEL
-	// Set white level (unsupported by current hardware design)
-	bufferCursor  = strstr( commandBuffer, "SW:" );
-	if (bufferCursor != NULL)
-	{
-		bufferCursor += 3;
-		white = parseNextInt(&bufferCursor);
-		return true;
-	}
+		// Set white level (unsupported by current hardware design)
+		bufferCursor  = strstr( commandBuffer, "SW:" );
+		if (bufferCursor != NULL)
+		{
+			bufferCursor += 3;
+			white = parseNextInt(&bufferCursor);
+			return true;
+		}
 	#endif
 	
 	// set delay / wait cycles between color changes.
