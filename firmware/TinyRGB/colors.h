@@ -31,7 +31,9 @@ void hslToRgb(HslColor* hsl, RgbColor* rgb)
 {
 	int v;
 
-	v = (hsl->l < 128) ? (long int)(hsl->l * (256 + hsl->s)) >> 8 : (((long int)(hsl->l + hsl->s) << 8) - (long int)hsl->l * hsl->s) >> 8;
+	v = (hsl->l < 128) 
+		? (long int)(hsl->l * (256 + hsl->s)) >> 8 
+		: (((long int)(hsl->l + hsl->s) << 8) - (long int)hsl->l * hsl->s) >> 8;
 
 	if (v <= 0) 
 	{
@@ -61,6 +63,5 @@ void hslToRgb(HslColor* hsl, RgbColor* rgb)
 		}
 	}
 }
-
 
 #endif /* COLORS_H_ */
