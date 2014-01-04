@@ -60,17 +60,13 @@ The hardware can be considered to be beta at best. Current issues are:
  
 ###Firmware
 
-The firmware is developed using the AVR-GCC tool chain and is somewhere between alpha and beta stages. 
+The firmware controls the RGB channels via PWM and stores its last state in the eeprom to retain
+its settings on a power cycle. See the protocol specification for further details on implemented
+features and modes.
 
-- [x] Provide RGB / HSV methods to control the RGB Values
-- [x] RGB fading / demo mode 
-- [x] Establish simple serial communication over Bluetooth (Echo service)
-- [x] Serial protocol specification to control and query the RGB values / modes.
-- [x] Serial protocol implementation
-- [x] (re)store last state from/in eeprom
-- [x] Fix HSV converter, behaves wonky in HSV fade mode with SV values other than 254/255 (unlikely)
-      (replaced with HSL)
+
+Open issues:
+
 - [ ] Provide unix makefiles and integration with avrdude
 - [ ] try to improve power consumption in pairing mode, 7805 regulator will be running quite hot otherwise.
-
-
+- [ ] change the HC-05 BT Module name to TinyRGB on first boot.
