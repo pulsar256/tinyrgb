@@ -30,7 +30,7 @@
 #include "usart.h"
 #include "colors.h"
 
-HsvColor  hsv;   // current hsv values (in MODE_FADE_HSV)
+HslColor  hsl;   // current hsl values (in MODE_FADE_HSL)
 RgbColor  oRgb;  // offset values for rgb, cast to int8_t before using
 RgbColor  rgb;   // current rgb values (in MODE_FADE_RANDOM_RGB)
 RgbColor  tRgb;  // target rgb values (for MODE_FADE_RANDOM_RGB)
@@ -65,7 +65,7 @@ int parseNextInt(char** buffer)
 }
 
 /*
-* dumps the contents of the RgbColor (or casted HsvColor) structure to serial.
+* dumps the contents of the RgbColor (or casted HslColor) structure to serial.
 */
 void dumpRgbColorToSerial(RgbColor* color)
 {
@@ -90,8 +90,8 @@ void dumpRgbColorToSerial(RgbColor* color)
  * "SW:WWW"           set white level (unsupported by the current hardware)
  * "SO:±RR±GG±BB"     set offset r / g / b for RGB Fade Mode (+/-99)
  * "SM:RRRGGGBBB"     set maximum r / g / b for RGB Fade Mode
- * "SSV:SSSVVV"       set SV for HSV Fade mode
- * "SMD:MMM"          set mode (001 - random rgb fade, 002 - fixed RGB, 003 - HSV Fade (buggy))
+ * "SSV:SSSVVV"       set SV for HSL Fade mode
+ * "SMD:MMM"          set mode (001 - random rgb fade, 002 - fixed RGB, 003 - HSL Fade (buggy))
  * "SD:DDD"           set delay for fade modes.
  * "status"           get current rgb values and mode
  * "help"             explains the protocol.
@@ -154,13 +154,20 @@ bool handleCommands(char* commandBuffer)
 		return true;
 	}
 	
-	// Set S and V values of the HSV Register.
-	bufferCursor  = strstr( commandBuffer, "SSV:" );
+	// Set HSL register values, values < 0 are ignored, 
+	// l
+	bufferCursor  = strstr( commandBuffer, "SHSL:" );
 	if (bufferCursor != NULL)
 	{
-		bufferCursor += 4;
-		hsv.s = parseNextInt(&bufferCursor);
-		hsv.v = parseNextInt(&bufferCursor);
+		bufferCursor += 6;
+		int tmp = 0;
+		tmp = parseNextInt(&bufferCursor);
+		if (tmp > 0) hsl.h = tmp;
+		tmp = parseNextInt(&bufferCursor);
+		if (tmp > 0) hsl.s = tmp;
+		tmp = parseNextInt(&bufferCursor);
+		if (tmp > 0) hsl.l = tmp;
+		
 		return true;
 	}
 	
@@ -206,9 +213,9 @@ bool handleCommands(char* commandBuffer)
 		dumpRgbColorToSerial(&rgb);
 		
 		writeNewLine();
-		writePgmStringToSerial(PSTR("#Current HSV Values:"));
+		writePgmStringToSerial(PSTR("#Current HSL Values:"));
 		writeNewLine();
-		dumpRgbColorToSerial((struct RgbColor *)&hsv); // hsv has same memory layout as rgb
+		dumpRgbColorToSerial((struct RgbColor *)&hsl); // hsl has same memory layout as rgb
 		
 		writeNewLine();
 		writePgmStringToSerial(PSTR("#Current RGB Offset Values:"));
@@ -313,9 +320,9 @@ void updateEEProm()
 	writeEepromByte(c++, rgb.r);
 	writeEepromByte(c++, rgb.g);
 	writeEepromByte(c++, rgb.b);
-	writeEepromByte(c++, hsv.h);
-	writeEepromByte(c++, hsv.s);
-	writeEepromByte(c++, hsv.v);
+	writeEepromByte(c++, hsl.h);
+	writeEepromByte(c++, hsl.s);
+	writeEepromByte(c++, hsl.l);
 	writeEepromByte(c++, oRgb.r);
 	writeEepromByte(c++, oRgb.g);
 	writeEepromByte(c++, oRgb.b);
@@ -340,9 +347,9 @@ void restoreFromEEProm()
 	rgb.r = readEepromByte(c++);
 	rgb.g = readEepromByte(c++);
 	rgb.b = readEepromByte(c++);
-	hsv.h = readEepromByte(c++);
-	hsv.s = readEepromByte(c++);
-	hsv.v = readEepromByte(c++);
+	hsl.h = readEepromByte(c++);
+	hsl.s = readEepromByte(c++);
+	hsl.l = readEepromByte(c++);
 	oRgb.r = readEepromByte(c++);
 	oRgb.g = readEepromByte(c++);
 	oRgb.b = readEepromByte(c++);
@@ -370,9 +377,9 @@ int main(void)
 	setRgb(0,0,0);
 	if (mode == 0)
 	{
-		mode = MODE_FADE_HSV;
-		hsv.s = 254;
-		hsv.v = 255;
+		mode = MODE_FADE_HSL;
+		hsl.s = 254;
+		hsl.l = 127;
 		mRgb.r = 255;
 		mRgb.g = 255;
 		mRgb.b = 255;
@@ -409,10 +416,10 @@ ISR(TIMER1_OVF_vect)
 			rgb.b += (rgb.b < tRgb.b) ? 1 : -1;
 		}
 		
-		else if (mode == MODE_FADE_HSV)
+		else if (mode == MODE_FADE_HSL)
 		{
-			hsv.h++;
-			rgb = hsvToRgb(hsv);
+			hsl.h++;
+			hslToRgb(&hsl,&rgb);
 		}
 		
 		setRgb(rgb.r,rgb.g,rgb.b);

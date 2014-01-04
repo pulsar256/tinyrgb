@@ -23,7 +23,7 @@
 #define REG_WHI                 OCR0B
 #define MODE_FADE_RANDOM_RGB    1
 #define MODE_FIXED              2
-#define MODE_FADE_HSV           3
+#define MODE_FADE_HSL           3
 #define LOCAL_ECHO              1
 //#define ENABLE_BLINK_CONFIRM
 //#define ENABLE_WHITECHANNEL

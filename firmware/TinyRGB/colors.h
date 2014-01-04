@@ -3,7 +3,6 @@
  *
  * Created: 23.09.2013 17:38:22
  * Author: Paul Rogalinski, paul@paul.vc
- * HSV Conversion adapted from http://stackoverflow.com/questions/3018313/algorithm-to-convert-rgb-to-hsv-and-hsv-to-rgb
  */
 
 
@@ -21,47 +20,47 @@ typedef struct
 {
 	unsigned char h;
 	unsigned char s;
-	unsigned char v;
-} HsvColor;
+	unsigned char l;
+} HslColor;
 
 /*
- * converts a HSV value to RGB using integer arithmetic only. 
- * Current implementation has some flaws, expect the converted values to have some jitter when cycling through H
+ * adapted from http://tog.acm.org/resources/GraphicsGems/gems/HSLtoRGB.c
+ * converts a HSL value to an RGB value.
  */
-RgbColor hsvToRgb(HsvColor hsv)
+void hslToRgb(HslColor* hsl, RgbColor* rgb)
 {
-	RgbColor rgb;
-	unsigned char region, remainder, p, q, t;
-	
-	if(hsv.s == 0) 
-	{
-		rgb.r = rgb.g = rgb.b = hsv.v;
-		return rgb;
-	}
+	int v;
 
-	region = hsv.h / 43;
-	remainder = (hsv.h - (region * 43)) * 6;
+	v = (hsl->l < 128) ? (long int)(hsl->l * (256 + hsl->s)) >> 8 : (((long int)(hsl->l + hsl->s) << 8) - (long int)hsl->l * hsl->s) >> 8;
 
-	p = (hsv.v * (255 - hsv.s)) >> 8;
-	q = (hsv.v * (255 - ((hsv.s * remainder) >> 8))) >> 8;
-	t = (hsv.v * (255 - ((hsv.s * (255 - remainder)) >> 8))) >> 8;
-	
-	switch(region)
+	if (v <= 0) 
 	{
-		case 0:
-		rgb.r = hsv.v; rgb.g = t; rgb.b = p; break;
-		case 1:
-		rgb.r = q; rgb.g = hsv.v; rgb.b = p; break;
-		case 2:
-		rgb.r = p; rgb.g = hsv.v; rgb.b = t; break;
-		case 3:
-		rgb.r = p; rgb.g = q; rgb.b = hsv.v; break;
-		case 4:
-		rgb.r = t; rgb.g = p; rgb.b = hsv.v; break;
-		default:
-		rgb.r = hsv.v; rgb.g = p; rgb.b = q; break;
+		rgb->r = rgb->g = rgb->b = 0;
+	} 
+	else 
+	{
+		long int m;
+		long int sextant;
+		long int fract, vsf, mid1, mid2;
+		int hue = hsl->h;
+
+		m = hsl->l + hsl->l - v;
+		hue *= 6;
+		sextant = hue >> 8;
+		fract = hue - (sextant << 8);
+		vsf = v * fract * (v - m) / v >> 8;
+		mid1 = m + vsf;
+		mid2 = v - vsf;
+		switch (sextant) {
+			case 0: rgb->r = v;    rgb->g = mid1;  rgb->b = m;    break;
+			case 1: rgb->r = mid2; rgb->g = v;     rgb->b = m;    break;
+			case 2: rgb->r = m;    rgb->g = v;     rgb->b = mid1; break;
+			case 3: rgb->r = m;    rgb->g = mid2;  rgb->b = v;    break;
+			case 4: rgb->r = mid1; rgb->g = m;     rgb->b = v;    break;
+			case 5: rgb->r = v;    rgb->g = m;     rgb->b = mid2; break;
+		}
 	}
-	return rgb;
 }
+
 
 #endif /* COLORS_H_ */

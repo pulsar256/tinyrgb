@@ -27,15 +27,14 @@ void initPwm(void)
 	// fast PWM mode
 	// clock / 64 (~1.2khz @ 20mhz system clock)
 	// enable both comparator outputs
-
-	TCCR0A =  (1<<WGM01) | (1<<WGM00) | (1<<COM0A0) | (1<<COM0A1) | (1<<COM0B0) | (1<<COM0B1);
-	TCCR0B =  (1<<CS00) | (1<<CS01);
+	TCCR0A = (1<<WGM01) | (1<<WGM00) | (1<<COM0A0) | (1<<COM0A1) | (1<<COM0B0) | (1<<COM0B1);
+	TCCR0B = (1<<CS00) | (1<<CS01);
 
 	// setup timer 1
 	// fast PWM mode @ 8 bit
 	// clock / 64 (~1.2khz @ 20mhz system clock)
 	// enable both comparator outputs
-	TCCR1A =  (1<<COM1A0) | (1<<COM1A1) | (1<<COM1B0) | (1<<COM1B1) | (1<<WGM10);
+	TCCR1A = (1<<COM1A0) | (1<<COM1A1) | (1<<COM1B0) | (1<<COM1B1) | (1<<WGM10);
 	TCCR1B = (1<<CS11) | (1<<CS10) | (1<<WGM12);
 	
 	// turn off the outputs
@@ -60,7 +59,8 @@ void setRgb(uint8_t r, uint8_t g, uint8_t b)
 	/*
 	 * Loads the white level into the output comparator register 
 	 */
-	void setWhite(uint8_t w){
+	void setWhite(uint8_t w)
+	{
 		REG_WHI = 255-w;
 	}
 #endif
