@@ -27,12 +27,12 @@ GUI application.
 
 The implementation supports the following commands sent via a serial modem link (8 9600 8n1 None):
 ```
-"SRGB:RRRGGGBBB"      set r / g / b values, implicit change to mode 002 - fixed RGB.
+"SRGB:RRRGGGBBB"      set r / g / b values, implicit change to mode 002 - fixed RGB/HSL.
 "SW:WWW"              set white level (unsupported by the current hardware)
 "SO:±RR±GG±BB"        set offset r / g / b for RGB Fade Mode (+/-99)
 "SM:RRRGGGBBB"        set maximum r / g / b for RGB Fade Mode
 "SHSL:HHHSSSLL"       set the HSL values. Pass -01 to ignore a value.
-"SMD:MMM"             set mode (001 - random RGB fader, 002 - fixed RGB, 003 - HSL fader)
+"SMD:MMM"             set mode (001 - random RGB fader, 002 - fixed RGB/HSL, 003 - HSL fader)
 "SD:DDD"              set delay for fade modes.
 "SAV:VVV"             enables (VVV > 0) or disables (VVV == 0) the eeprom autosave function.
 "status"              get current RGB values and mode

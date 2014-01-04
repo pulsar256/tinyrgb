@@ -61,7 +61,7 @@ int parseNextInt(char** buffer)
 	strncpy(val,*buffer,3);
 	val[3]='\0';
 	*buffer = *buffer + 3;
-	return rgb.b = atoi(val);
+	return atoi(val);
 }
 
 /*
@@ -86,12 +86,12 @@ void dumpRgbColorToSerial(RgbColor* color)
  * Parses the command buffer and changes the current state accordingly.
  *
  * Command Syntax:
- * "SRGB:RRRGGGBBB"   set r / g / b values, implicit change to mode 002 - fixed RGB.
+ * "SRGB:RRRGGGBBB"   set r / g / b values, implicit change to mode 002 - fixed RGB/HSL.
  * "SW:WWW"           set white level (unsupported by the current hardware)
  * "SO:±RR±GG±BB"     set offset r / g / b for RGB Fade Mode (+/-99)
  * "SM:RRRGGGBBB"     set maximum r / g / b for RGB Fade Mode
  * "SSV:SSSVVV"       set SV for HSL Fade mode
- * "SMD:MMM"          set mode (001 - random rgb fade, 002 - fixed RGB, 003 - HSL Fade (buggy))
+ * "SMD:MMM"          set mode (001 - random rgb fade, 002 - fixed RGB/HSL, 003 - HSL Fade (buggy))
  * "SD:DDD"           set delay for fade modes.
  * "status"           get current rgb values and mode
  * "help"             explains the protocol.
@@ -155,11 +155,12 @@ bool handleCommands(char* commandBuffer)
 	}
 	
 	// Set HSL register values, values < 0 are ignored, 
-	// l
+	// mode is not changed to fixed to keep the colors
+	// cycling while adjusting saturation or luminosity.
 	bufferCursor  = strstr( commandBuffer, "SHSL:" );
 	if (bufferCursor != NULL)
 	{
-		bufferCursor += 6;
+		bufferCursor += 5;
 		int tmp = 0;
 		tmp = parseNextInt(&bufferCursor);
 		if (tmp > 0) hsl.h = tmp;
@@ -167,6 +168,11 @@ bool handleCommands(char* commandBuffer)
 		if (tmp > 0) hsl.s = tmp;
 		tmp = parseNextInt(&bufferCursor);
 		if (tmp > 0) hsl.l = tmp;
+		
+		// we always use the rgb register to set the output PWM channels.
+		// in order to use hsl in a fixed mode, we need to do the conversion
+		// once here.
+		hslToRgb(&hsl,&rgb);
 		
 		return true;
 	}

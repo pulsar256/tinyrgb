@@ -29,11 +29,9 @@ typedef struct
  */
 void hslToRgb(HslColor* hsl, RgbColor* rgb)
 {
-	int v;
-
-	v = (hsl->l < 128) 
-		? (long int)(hsl->l * (256 + hsl->s)) >> 8 
-		: (((long int)(hsl->l + hsl->s) << 8) - (long int)hsl->l * hsl->s) >> 8;
+	int v = (hsl->l < 128) 
+		? ((long int)hsl->l * (256 + (long int)hsl->s)) >> 8 
+		: ((((long int)hsl->l + (long int)hsl->s) << 8) - (long int)hsl->l * (long int)hsl->s) >> 8;
 
 	if (v <= 0) 
 	{
