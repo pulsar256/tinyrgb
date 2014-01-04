@@ -11,22 +11,30 @@
 
 #include<stdbool.h>
 
+#define UART_BAUD_RATE 9600UL
+// @see 14.3.1 Internal Clock Generation – The Baud Rate Generator
+#define UART_BAUD_CALC(UART_BAUD_RATE,F_CPU) ((F_CPU)/((UART_BAUD_RATE)*16l)-1)
 
-typedef void (*buffer_ready_callback)(char* commandBuffer);
-void trgbser_def_cb(){}
-buffer_ready_callback trgbser_callback = trgbser_def_cb;
 
-char    commandBuffer[16];
-uint8_t bufferPos = 0;
-const char* trgbser_prompt;
+typedef void (*serialBufferReadyCallbackType)(char* commandBuffer);
+serialBufferReadyCallbackType serialBufferReadyCallback = 0x00;
+
+char          commandBuffer[16];
+uint8_t       bufferPos = 0;
+const char*   bufferReadyPrompt;
 volatile bool bufferReady = false;
 
-
-void setCommandBufferCallback(buffer_ready_callback cb)
+/*
+ * Sets the callback reference for buffer ready events 
+ */
+void setCommandBufferCallback(serialBufferReadyCallbackType cb)
 {
-	trgbser_callback = cb;
+	serialBufferReadyCallback = cb;
 }
 
+/*
+ * Initializes the USART registers, enables the ISR
+ */
 void initSerial(void)
 {
 	UCSRC |= (1 << UCSZ0) | (1 << UCSZ1); // 1 Stop-Bit, 8 Bits
@@ -37,9 +45,13 @@ void initSerial(void)
 	UBRRH = (uint8_t) (UART_BAUD_CALC(UART_BAUD_RATE,F_CPU)>>8);
 	UBRRL = (uint8_t) (UART_BAUD_CALC(UART_BAUD_RATE,F_CPU));
 	
-	trgbser_prompt = PSTR("\r\n");
+	bufferReadyPrompt = PSTR("\r\n");
 }
 
+/*
+ * Waits for the usart to become ready to send data and 
+ * writes a single char.
+ */
 void writeCharToSerial(unsigned char c)
 {
 	// UCSRA – USART Control and Status Register A
@@ -48,37 +60,35 @@ void writeCharToSerial(unsigned char c)
 	UDR = c;
 }
 
+/*
+ * Writes a PROGMEM string to the serial port
+ */
 void writePgmStringToSerial(const char *pgmString)
 {
 	while (pgm_read_byte(pgmString) != 0x00) writeCharToSerial((char)pgm_read_byte(pgmString++));
 }
 
+/*
+ * Writes a string/char[] to the serial port.
+ */
 void writeStringToSerial(char *str)
 {
 	while (*str != 0x00) writeCharToSerial(*str++);
 }
 
+/*
+ * Writes a linefeed and newline to the serial port
+ */
 void writeNewLine()
 {
-	writeStringToSerial("\r\n");
+	writePgmStringToSerial(PSTR("\r\n"));
 }
 
-signed char readSerialChar( void )
-{
-	// UCSRA – USART Control and Status Register A
-	// • Bit 7 – RXC: USART Receive Complete
-	while ( !(UCSRA & (1<<RXC)) );
-	
-	return UDR;
-}
-
-void waitForBuffer( void )
-{
-	while (!bufferReady);
-	bufferReady = false;
-}
-
-
+/*
+ * Handles bytes received from the serial port. Fills up the command buffer and calls
+ * the bufferReadyCallback when the buffer overflows or a linefeed/newline has been
+ * sent.
+ */
 ISR(USART_RX_vect){
 	char chrRead;
 	chrRead = UDR;
@@ -88,9 +98,9 @@ ISR(USART_RX_vect){
 	if ((bufferPos >= (sizeof(commandBuffer)-1)) || ((chrRead == '\n' || chrRead == '\r')))
 	{
 		bufferPos = 0;
-		writePgmStringToSerial(trgbser_prompt);
+		writePgmStringToSerial(bufferReadyPrompt);
 		bufferReady = true;
-		trgbser_callback(commandBuffer);
+		if (serialBufferReadyCallback != 0x00) serialBufferReadyCallback(commandBuffer);
 	}
 }
 
