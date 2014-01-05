@@ -15,9 +15,10 @@ communities and can be sourced for few Dollar/Euro from eBay.
 
 ##Protocol Specification
 
-The TinyRGB Firmware supports 3 basic modes: 
+The TinyRGB Firmware supports 4 basic modes: 
 
 - Random RGB Fade Mode
+- RGB Flasher Mode
 - HSL Fader Mode 
 - Fixed RGB Mode
 
@@ -27,16 +28,21 @@ GUI application.
 
 The implementation supports the following commands sent via a serial modem link (8 9600 8n1 None):
 ```
-"SRGB:RRRGGGBBB"      set r / g / b values, implicit change to mode 002 - fixed RGB/HSL.
+"SRGB:RRRGGGBBB"      set R/G/B values, implicit change to mode 001 - fixed RGB/HSL.
 "SW:WWW"              set white level (unsupported by the current hardware)
-"SO:±RR±GG±BB"        set offset r / g / b for RGB Fade Mode (+/-99)
-"SM:RRRGGGBBB"        set maximum r / g / b for RGB Fade Mode
-"SHSL:HHHSSSLL"       set the HSL values. Pass -01 to ignore a value.
-"SMD:MMM"             set mode (001 - random RGB fader, 002 - fixed RGB/HSL, 003 - HSL fader)
-"SD:DDD"              set delay for fade modes.
+"SO:±RR±GG±BB"        set offset R/G/B values for RGB Fade Mode (+/-99)
+"SM:RRRGGGBBB"        set maximum R/G/B values for RGB Fade Mode
+"SHSL:HHHSSSLL"       set the H/S/L values. Pass -01 to ignore a value.
+"SMD:MMM"             set mode:
+                       001 - fixed RGB/HSL 
+                       002 - random RGB fader
+                       003 - HSL fader 
+                       004 - RGB Flasher
+"SD:DDD"              set delay for fade / flash modes.
 "SAV:VVV"             enables (VVV > 0) or disables (VVV == 0) the eeprom autosave function.
 "status"              get current RGB values and mode
 "help"                help screen.
+
 ```
 
 Setting HSL values does not put the controller into a fixed color mode. If you want to tweak partial HSL registers

@@ -86,21 +86,26 @@ void dumpRgbColorToSerial(RgbColor* color)
  * Parses the command buffer and changes the current state accordingly.
  *
  * Command Syntax:
- * "SRGB:RRRGGGBBB"   set r / g / b values, implicit change to mode 002 - fixed RGB/HSL.
- * "SW:WWW"           set white level (unsupported by the current hardware)
- * "SO:켙R켊G켃B"     set offset r / g / b for RGB Fade Mode (+/-99)
- * "SM:RRRGGGBBB"     set maximum r / g / b for RGB Fade Mode
- * "SSV:SSSVVV"       set SV for HSL Fade mode
- * "SMD:MMM"          set mode (001 - random rgb fade, 002 - fixed RGB/HSL, 003 - HSL Fade (buggy))
- * "SD:DDD"           set delay for fade modes.
- * "status"           get current rgb values and mode
- * "help"             explains the protocol.
+ * "SRGB:RRRGGGBBB"      set R/G/B values, implicit change to mode 001 - fixed RGB/HSL.
+ * "SW:WWW"              set white level (unsupported by the current hardware)
+ * "SO:켙R켊G켃B"        set offset R/G/B values for RGB Fade Mode (+/-99)
+ * "SM:RRRGGGBBB"        set maximum R/G/B values for RGB Fade Mode
+ * "SHSL:HHHSSSLL"       set the H/S/L values. Pass -01 to ignore a value.
+ * "SMD:MMM"             set mode:
+ *                        001 - fixed RGB/HSL
+ *                        002 - random RGB fader
+ *                        003 - HSL fader
+ *                        004 - RGB Flasher
+ * "SD:DDD"              set delay for fade / flash modes.
+ * "SAV:VVV"             enables (VVV > 0) or disables (VVV == 0) the eeprom autosave function.
+ * "status"              get current RGB values and mode
+ * "help"                help screen.
  */
 bool handleCommands(char* commandBuffer)
 {
 	char *bufferCursor;
 	
-	// Set RGB values and switch to MODE_FIXED (002)
+	// Set RGB values and switch to MODE_FIXED (001)
 	bufferCursor = strstr( commandBuffer, "SRGB:" );
 	if (bufferCursor != NULL)
 	{
@@ -426,6 +431,13 @@ ISR(TIMER1_OVF_vect)
 		{
 			hsl.h++;
 			hslToRgb(&hsl,&rgb);
+		}
+		
+		else if (mode == MODE_RANDOM_FLASH)
+		{
+			rgb.r = getNextRandom(mRgb.r, (int8_t)oRgb.r, rgb.r);
+			rgb.g = getNextRandom(mRgb.g, (int8_t)oRgb.g, rgb.g);
+			rgb.b = getNextRandom(mRgb.b, (int8_t)oRgb.b, rgb.b);
 		}
 		
 		setRgb(rgb.r,rgb.g,rgb.b);

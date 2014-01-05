@@ -21,9 +21,10 @@
 #define REG_GRN                 OCR1A
 #define REG_BLU                 OCR0A
 #define REG_WHI                 OCR0B
-#define MODE_FADE_RANDOM_RGB    1
-#define MODE_FIXED              2
+#define MODE_FIXED              1
+#define MODE_FADE_RANDOM_RGB    2
 #define MODE_FADE_HSL           3
+#define MODE_RANDOM_FLASH       4
 #define LOCAL_ECHO              1
 //#define ENABLE_BLINK_CONFIRM
 //#define ENABLE_WHITECHANNEL
