@@ -38,8 +38,8 @@ RgbColor  mRgb;  // maximum / clipping values
 uint8_t   white; // white level, unsupported by the current hardware
 
 uint8_t mode = MODE_FADE_RANDOM_RGB;
-uint8_t wait = 100;
-uint8_t currentWait = 100;
+int wait = 100;
+int currentWait = 100;
 
 bool autosaveEnabled = true;
 
@@ -354,7 +354,22 @@ void restoreFromEEProm()
 {
 	int c = 0;
 	mode = readEepromByte(c++);
-	if (mode == 0) return; // state not saved yet.
+	if (mode == 0) // eeprom uninitialized. 
+	{
+		// this won't work in the current hardware revision.
+		// it is necessary to pull the pin 34 high on the
+		// BT module in order to ender the "AT-Mode". Furthermore
+		// the module will expect a baud rate of 38400 which we 
+		// cannot precisely generate using a 20MHz quartz. So even if
+		// you manage to pull the line high and boot into this
+		// part of code, the name change will fail due to a 1.4% error
+		// in the baud rate.
+		// next hw revision shall use a 16mhz quartz and 
+		// be able to control the pin 34 on the BT module.
+		//   
+		// writeStringToSerial("AT+NAME=TinyRGB\r\n");
+		return;
+	}; 
 	rgb.r = readEepromByte(c++);
 	rgb.g = readEepromByte(c++);
 	rgb.b = readEepromByte(c++);
@@ -416,7 +431,7 @@ ISR(TIMER1_OVF_vect)
 {
 	if (currentWait-- == 0)
 	{
-		currentWait = wait;
+		currentWait = wait*10;
 		if (mode == MODE_FADE_RANDOM_RGB)
 		{
 			if (tRgb.r == rgb.r) tRgb.r = getNextRandom(mRgb.r, (int8_t)oRgb.r, rgb.r);
@@ -440,7 +455,7 @@ ISR(TIMER1_OVF_vect)
 			rgb.b = getNextRandom(mRgb.b, (int8_t)oRgb.b, rgb.b);
 		}
 		
-		setRgb(rgb.r,rgb.g,rgb.b);
+		setRgb(rgb.r,rgb.g,rgb.b);				
 		#ifdef ENABLE_WHITECHANNEL
 		setWhite(white);
 		#endif

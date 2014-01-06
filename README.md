@@ -10,8 +10,8 @@ RGB strips by a small Bluetooth-Enabled controller and driver.
 The board layout has been restricted to 5x5cm so you can get your PCBs produced for instance by Seeedstudio for
 very little investment. The ATTiny4313 microcontroller has been chosen with the Arduino-Community in mind. While 
 this chip is not compatible with your Arduino-IDE per se, it is very closely related to it and should make it 
-a little bit more accessible. The HC-05 Bluetooth module used is one of the most popular ones across the hacker 
-communities and can be sourced for few Dollar/Euro from eBay. 
+a little bit more accessible. The HC-05 Bluetooth module used is one of the most popular ones across the 
+maker/hacker communities and can be sourced for few Dollar/Euro from eBay. 
 
 ##Protocol Specification
 
@@ -42,7 +42,6 @@ The implementation supports the following commands sent via a serial modem link 
 "SAV:VVV"             enables (VVV > 0) or disables (VVV == 0) the eeprom autosave function.
 "status"              get current RGB values and mode
 "help"                help screen.
-
 ```
 
 Setting HSL values does not put the controller into a fixed color mode. If you want to tweak partial HSL registers
@@ -73,6 +72,6 @@ features and modes.
 
 Open issues:
 
-- [ ] Provide unix makefiles and integration with avrdude
+- [ ] Provide a unix makefile and integration with avrdude
 - [ ] try to improve power consumption in pairing mode, 7805 regulator will be running quite hot otherwise.
 - [ ] change the HC-05 BT Module name to TinyRGB on first boot.

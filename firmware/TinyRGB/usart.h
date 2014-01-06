@@ -11,10 +11,9 @@
 
 #include<stdbool.h>
 
-#define UART_BAUD_RATE 9600UL
 // @see 14.3.1 Internal Clock Generation – The Baud Rate Generator
+#define UART_BAUD_RATE 9600L
 #define UART_BAUD_CALC(UART_BAUD_RATE,F_CPU) ((F_CPU)/((UART_BAUD_RATE)*16l)-1)
-
 
 typedef void (*serialBufferReadyCallbackType)(char* commandBuffer);
 serialBufferReadyCallbackType serialBufferReadyCallback = 0x00;
