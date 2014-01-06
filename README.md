@@ -56,12 +56,23 @@ RGB offsets and maximum caps only apply to mode 002 (RGB Fader)
 ##Current Status 
 ###Hardware
 
-The hardware can be considered to be beta at best. Current issues are:
+The hardware can be considered to be beta at best. Changes planned for the next revision:
 
 - [ ] 7805 regulator needs to be Rotated by 180° to prevent issues with heatsink mounting
 - [ ] Better decoupling
-- [ ] Consider to upgrade the PCB Size to 5x10cm.
+- [ ] Bump up the PCB size to 5x10cm to enable the hardware changes below.
+- [ ] Use a 16MHz quartz instead of 20 to improve compatibility with standard UART baudrates.
+- [ ] Hook up HC05 pin 34 to the AVR to enable the AT Mode.
+- [ ] needs verification: hook up HC05 Reset line to the AVR to exit the AT mode. If powercycling is required, use a transitor to control the VCC line. 
+- [ ] Optional: status LEDS for the HC-05 module (pin 31, pin 32)
+- [ ] Use 4  mosfets instead of the ULN2003 transistor array to drive loads > 1A per channel enabling the 4th white channel found on some RGB+W strips.
+- [ ] TBD: Use the PCB as a heatsink for the 7805, alternatively put the regulator to one side of the PCB so it can be bend in a 90° angle and attach a dedicated heatsink "offboard".
+- [ ] Use higher resistor values for the status and power leds to save ~15-20 mA
 
+Please note, that the BT HC05 module will consume about 50mA current while in pairing mode and about 8mA 
+(according th the data sheet http://www.exp-tech.de/service/datasheet/HC-Serial-Bluetooth-Products.pdf) 
+while paired. This needs to be verified, the whole system will consume upto 45mA in idle (status LED lit) 
+and 70mA while paired.
  
 ###Firmware
 
@@ -74,4 +85,4 @@ Open issues:
 
 - [ ] Provide a unix makefile and integration with avrdude
 - [ ] try to improve power consumption in pairing mode, 7805 regulator will be running quite hot otherwise.
-- [ ] change the HC-05 BT Module name to TinyRGB on first boot.
+- [ ] change the HC-05 BT Module name to TinyRGB on first boot. (next hardware revision required)
