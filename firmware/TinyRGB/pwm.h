@@ -13,13 +13,14 @@
 /*
  * Initialize PWM output pins, timers and comparators.
  */
-void initPwm(void)
-{
+void initPwm(void) {
 	// set PWM pins to output
 	DDRB |= (1 << PB2) | (1 << PB3) | (1 << PB4);
 	
 	#ifdef ENABLE_WHITECHANNEL
-		DDRD |= (1 << PD5); // not supported by the current hardware. you can hook up an external driver (mosfet) to pin 9 to control a dedicated white channel.
+		// not supported by the current hardware. you can hook up an external driver (mosfet) 
+		// to pin 9 to control a dedicated white channel.
+		DDRD |= (1 << PD5); 
 	#endif
 	
 	
@@ -47,8 +48,7 @@ void initPwm(void)
 /*
  * Loads the RGB value into the output comparator registers
  */
-void setRgb(uint8_t r, uint8_t g, uint8_t b)
-{
+void setRgb(uint8_t r, uint8_t g, uint8_t b) {
 	REG_RED = 255-r;
 	REG_BLU = 255-b;
 	REG_GRN = 255-g;
@@ -59,8 +59,7 @@ void setRgb(uint8_t r, uint8_t g, uint8_t b)
 	/*
 	 * Loads the white level into the output comparator register 
 	 */
-	void setWhite(uint8_t w)
-	{
+	void setWhite(uint8_t w) {
 		REG_WHI = 255-w;
 	}
 #endif

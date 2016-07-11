@@ -9,15 +9,13 @@
 #ifndef COLORS_H_
 #define COLORS_H_
 
-typedef struct
-{
+typedef struct {
 	unsigned char r;
 	unsigned char g;
 	unsigned char b;
 } RgbColor;
 
-typedef struct
-{
+typedef struct {
 	unsigned char h;
 	unsigned char s;
 	unsigned char l;
@@ -27,18 +25,15 @@ typedef struct
  * adapted from http://tog.acm.org/resources/GraphicsGems/gems/HSLtoRGB.c
  * converts a HSL value to an RGB value.
  */
-void hslToRgb(HslColor* hsl, RgbColor* rgb)
-{
+void hslToRgb(HslColor* hsl, RgbColor* rgb) {
 	int v = (hsl->l < 128) 
 		? (long int)hsl->l * (256 + (long int)hsl->s) >> 8 
 		: ((((long int)hsl->l + (long int)hsl->s) << 8) - (long int)hsl->l * (long int)hsl->s) >> 8;
 
-	if (v <= 0) 
-	{
+	if (v <= 0) {
 		rgb->r = rgb->g = rgb->b = 0;
 	} 
-	else 
-	{
+	else {
 		long int m;
 		long int sextant;
 		long int fract, vsf, mid1, mid2;

@@ -26,16 +26,14 @@ volatile bool bufferReady = false;
 /*
  * Sets the callback reference for buffer ready events 
  */
-void setCommandBufferCallback(serialBufferReadyCallbackType cb)
-{
+void setCommandBufferCallback(serialBufferReadyCallbackType cb) {
 	serialBufferReadyCallback = cb;
 }
 
 /*
  * Initializes the USART registers, enables the ISR
  */
-void initSerial(void)
-{
+void initSerial(void) {
 	UCSRC |= (1 << UCSZ0) | (1 << UCSZ1); // 1 Stop-Bit, 8 Bits
 	UCSRB = (1 << TXEN)  | (1 <<  RXEN); // enable RX/TX
 	UCSRB |= (1 << RXCIE); // Enable the USART Receive Complete interrupt (USART_RXC)
@@ -51,8 +49,7 @@ void initSerial(void)
  * Waits for the usart to become ready to send data and 
  * writes a single char.
  */
-void writeCharToSerial(unsigned char c)
-{
+void writeCharToSerial(unsigned char c) {
 	// UCSRA – USART Control and Status Register A
 	// • Bit 5 – UDRE: USART Data Register Empty
 	while(!(UCSRA & (1 << UDRE)));
@@ -62,24 +59,21 @@ void writeCharToSerial(unsigned char c)
 /*
  * Writes a PROGMEM string to the serial port
  */
-void writePgmStringToSerial(const char *pgmString)
-{
+void writePgmStringToSerial(const char *pgmString) {
 	while (pgm_read_byte(pgmString) != 0x00) writeCharToSerial((char)pgm_read_byte(pgmString++));
 }
 
 /*
  * Writes a string/char[] to the serial port.
  */
-void writeStringToSerial(char *str)
-{
+void writeStringToSerial(char *str) {
 	while (*str != 0x00) writeCharToSerial(*str++);
 }
 
 /*
  * Writes a linefeed and newline to the serial port
  */
-void writeNewLine()
-{
+void writeNewLine() {
 	writePgmStringToSerial(PSTR("\r\n"));
 }
 
@@ -88,14 +82,13 @@ void writeNewLine()
  * the bufferReadyCallback when the buffer overflows or a linefeed/newline has been
  * sent.
  */
-ISR(USART_RX_vect){
+ISR(USART_RX_vect) {
 	char chrRead;
 	chrRead = UDR;
 	commandBuffer[bufferPos++] = chrRead;
 	commandBuffer[bufferPos] = 0x00;
 	UDR = chrRead;
-	if ((bufferPos >= (sizeof(commandBuffer)-1)) || ((chrRead == '\n' || chrRead == '\r')))
-	{
+	if ((bufferPos >= (sizeof(commandBuffer)-1)) || ((chrRead == '\n' || chrRead == '\r'))) {
 		bufferPos = 0;
 		writePgmStringToSerial(bufferReadyPrompt);
 		bufferReady = true;

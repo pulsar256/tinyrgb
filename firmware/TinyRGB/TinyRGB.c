@@ -46,17 +46,15 @@ bool autosaveEnabled = true;
 /*
  * take a guess.
  */
-void printHelp()
-{
-	writePgmStringToSerial(PSTR("\f\aTiny RGB 0.1, github.com/pulsar256/tinyrgb \r\nFull protocol specification available at Github.\r\nCompiled: " __TIMESTAMP__ "\r\n"));
+void printHelp() {
+	writePgmStringToSerial(PSTR("\f\aTiny RGB 0.1, github.com/pulsar256/tinyrgb \\r\nFull protocol specification available at Github.\r\nCompiled: " __TIMESTAMP__ "\r\n"));
 }
 
 
 /*
  * Parses an integer value from a triple of chars. advances the pointer to the string afterwards
  */
-int parseNextInt(char** buffer)
-{
+int parseNextInt(char** buffer) {
 	char val[4];
 	strncpy(val,*buffer,3);
 	val[3]='\0';
@@ -67,8 +65,7 @@ int parseNextInt(char** buffer)
 /*
 * dumps the contents of the RgbColor (or casted HslColor) structure to serial.
 */
-void dumpRgbColorToSerial(RgbColor* color)
-{
+void dumpRgbColorToSerial(RgbColor* color) {
 	char buffer[4];
 	itoa(color->r,buffer,10);
 	writeStringToSerial(buffer);
@@ -101,14 +98,12 @@ void dumpRgbColorToSerial(RgbColor* color)
  * "status"              get current RGB values and mode
  * "help"                help screen.
  */
-bool handleCommands(char* commandBuffer)
-{
+bool handleCommands(char* commandBuffer) {
 	char *bufferCursor;
 	
 	// Set RGB values and switch to MODE_FIXED (001)
 	bufferCursor = strstr( commandBuffer, "SRGB:" );
-	if (bufferCursor != NULL)
-	{
+	if (bufferCursor != NULL) {
 		mode = MODE_FIXED;
 		bufferCursor += 5;
 		rgb.r = parseNextInt(&bufferCursor);
@@ -119,8 +114,7 @@ bool handleCommands(char* commandBuffer)
 	
 	// Set max RGB
 	bufferCursor  = strstr( commandBuffer, "SM:" );
-	if (bufferCursor != NULL)
-	{
+	if (bufferCursor != NULL) {
 		bufferCursor += 3;
 		mRgb.r = parseNextInt(&bufferCursor);
 		mRgb.g = parseNextInt(&bufferCursor);
@@ -130,8 +124,7 @@ bool handleCommands(char* commandBuffer)
 	
 	// Set RGB offset
 	bufferCursor  = strstr( commandBuffer, "SO:" );
-	if (bufferCursor != NULL)
-	{
+	if (bufferCursor != NULL) {
 		bufferCursor += 3;
 		oRgb.r  = parseNextInt(&bufferCursor);
 		oRgb.g  = parseNextInt(&bufferCursor);
@@ -142,8 +135,7 @@ bool handleCommands(char* commandBuffer)
 	#ifdef ENABLE_WHITECHANNEL
 		// Set white level (unsupported by current hardware design)
 		bufferCursor  = strstr( commandBuffer, "SW:" );
-		if (bufferCursor != NULL)
-		{
+		if (bufferCursor != NULL) {
 			bufferCursor += 3;
 			white = parseNextInt(&bufferCursor);
 			return true;
@@ -152,8 +144,7 @@ bool handleCommands(char* commandBuffer)
 	
 	// set delay / wait cycles between color changes.
 	bufferCursor  = strstr( commandBuffer, "SD:" );
-	if (bufferCursor != NULL)
-	{
+	if (bufferCursor != NULL) {
 		bufferCursor += 3;
 		wait = parseNextInt(&bufferCursor);
 		return true;
@@ -163,8 +154,7 @@ bool handleCommands(char* commandBuffer)
 	// mode is not changed to fixed to keep the colors
 	// cycling while adjusting saturation or luminosity.
 	bufferCursor  = strstr( commandBuffer, "SHSL:" );
-	if (bufferCursor != NULL)
-	{
+	if (bufferCursor != NULL) {
 		bufferCursor += 5;
 		int tmp = 0;
 		tmp = parseNextInt(&bufferCursor);
@@ -184,8 +174,7 @@ bool handleCommands(char* commandBuffer)
 	
 	// Sets the delay
 	bufferCursor  = strstr( commandBuffer, "SMD:" );
-	if (bufferCursor != NULL)
-	{
+	if (bufferCursor != NULL) {
 		bufferCursor += 4;
 		mode = parseNextInt(&bufferCursor);
 		return true;
@@ -193,8 +182,7 @@ bool handleCommands(char* commandBuffer)
 	
 	// Dumps all status registers
 	bufferCursor = strstr( commandBuffer, "status" );
-	if (bufferCursor != NULL)
-	{
+	if (bufferCursor != NULL) {
 		char buffer[4];
 		
 		writeNewLine();
@@ -243,16 +231,14 @@ bool handleCommands(char* commandBuffer)
 	
 	// Dumps all status registers
 	bufferCursor = strstr( commandBuffer, "help" );
-	if (bufferCursor != NULL)
-	{
+	if (bufferCursor != NULL) {
 		printHelp();
 		return true;
 	}
 	
 	// Enables (value > 0) / Disables (value == 0) the autosave function.
 	bufferCursor  = strstr( commandBuffer, "SAV:" );
-	if (bufferCursor != NULL)
-	{
+	if (bufferCursor != NULL) {
 		bufferCursor += 4;
 		uint8_t value =  parseNextInt(&bufferCursor);
 		if (value > 0) autosaveEnabled = true;
@@ -268,20 +254,16 @@ bool handleCommands(char* commandBuffer)
  * Callback for the USART handler, executed each time the buffer is full or a 
  * newline has been submitted.
  */
-void serialBufferHandler(char* commandBuffer)
-{
+void serialBufferHandler(char* commandBuffer) {
 	cli();
 	
-	if (!handleCommands(commandBuffer))
-	{
+	if (!handleCommands(commandBuffer)) {
 		writePgmStringToSerial(PSTR("\r\nERR\r\n"));
 	}
-	else
-	{
+	else {
 		writePgmStringToSerial(PSTR("\r\nOK\r\n"));
 		if(autosaveEnabled) updateEEProm();
 	}
-	
 	
 	#ifdef ENABLE_BLINK_CONFIRM
 	// "roger-beep", very annoying if you do real time updates.
@@ -302,8 +284,7 @@ void serialBufferHandler(char* commandBuffer)
  * the passed offset will be off set once again by the value of 
  * EEPStart
  */
-void writeEepromByte(int offset, uint8_t value)
-{
+void writeEepromByte(int offset, uint8_t value) {
 	uint8_t* addr = (uint8_t*)(EEPStart + offset);
 	eeprom_update_byte(addr,value);
 }
@@ -314,8 +295,7 @@ void writeEepromByte(int offset, uint8_t value)
  * the passed offset will be off set once again by the value of 
  * EEPStart
  */
-uint8_t readEepromByte(int offset)
-{
+uint8_t readEepromByte(int offset) {
 	uint8_t* addr = (uint8_t*)(EEPStart + offset);
 	return eeprom_read_byte(addr);
 }
@@ -324,8 +304,7 @@ uint8_t readEepromByte(int offset)
 /*
  * Saves current state into the eeprom
  */
-void updateEEProm()
-{
+void updateEEProm() {
 	int c = 0;
 	writeEepromByte(c++, mode);
 	writeEepromByte(c++, rgb.r);
@@ -350,15 +329,16 @@ void updateEEProm()
 /*
  * restores the current state from the eeprom 
  */
-void restoreFromEEProm()
-{
+void restoreFromEEProm() {
 	int c = 0;
 	mode = readEepromByte(c++);
-	if (mode == 0) // eeprom uninitialized. 
-	{
+	mode=0;
+	
+	// eeprom uninitialized. 
+	if (mode == 0)  {
 		// this won't work in the current hardware revision.
 		// it is necessary to pull the pin 34 high on the
-		// BT module in order to ender the "AT-Mode". Furthermore
+		// BT module in order to enter the "AT-Mode". Furthermore
 		// the module will expect a baud rate of 38400 which we 
 		// cannot precisely generate using a 20MHz quartz. So even if
 		// you manage to pull the line high and boot into this
@@ -392,8 +372,7 @@ void restoreFromEEProm()
 /*
  * Initialization routines, self test and welcome screen. Main loop is implemented in the ISR below
  */
-int main(void)
-{
+int main(void) {
 	SLED_DDR = (1 << PIND6);
 
 	initSerial();
@@ -401,8 +380,7 @@ int main(void)
 	restoreFromEEProm();
 	
 	setRgb(0,0,0);
-	if (mode == 0)
-	{
+	if (mode == 0) {
 		mode = MODE_FADE_HSL;
 		hsl.s = 254;
 		hsl.l = 127;
@@ -427,13 +405,10 @@ int main(void)
  * Scheduled to run every 1-2ms (depending on your system clock). Transfers the color values into
  * the PWM registers and, depending on the current mode, computes the colorcycling effects
  */
-ISR(TIMER1_OVF_vect)
-{
-	if (currentWait-- == 0)
-	{
+ISR(TIMER1_OVF_vect) {
+	if (currentWait-- == 0) {
 		currentWait = wait*10;
-		if (mode == MODE_FADE_RANDOM_RGB)
-		{
+		if (mode == MODE_FADE_RANDOM_RGB) {
 			if (tRgb.r == rgb.r) tRgb.r = getNextRandom(mRgb.r, (int8_t)oRgb.r, rgb.r);
 			if (tRgb.g == rgb.g) tRgb.g = getNextRandom(mRgb.g, (int8_t)oRgb.g, rgb.g);
 			if (tRgb.b == rgb.b) tRgb.b = getNextRandom(mRgb.b, (int8_t)oRgb.b, rgb.b);
@@ -442,14 +417,12 @@ ISR(TIMER1_OVF_vect)
 			rgb.b += (rgb.b < tRgb.b) ? 1 : -1;
 		}
 		
-		else if (mode == MODE_FADE_HSL)
-		{
+		else if (mode == MODE_FADE_HSL) {
 			hsl.h++;
 			hslToRgb(&hsl,&rgb);
 		}
 		
-		else if (mode == MODE_RANDOM_FLASH)
-		{
+		else if (mode == MODE_RANDOM_FLASH) {
 			rgb.r = getNextRandom(mRgb.r, (int8_t)oRgb.r, rgb.r);
 			rgb.g = getNextRandom(mRgb.g, (int8_t)oRgb.g, rgb.g);
 			rgb.b = getNextRandom(mRgb.b, (int8_t)oRgb.b, rgb.b);

@@ -39,8 +39,7 @@ unsigned short getSeed()
  * Gets a random long value. A random seed will be obtained on first call
  * @see http://en.wikipedia.org/wiki/Random_number_generation
  */
-unsigned long getRandom()
-{
+unsigned long getRandom() {
 	if (m_z == 0) m_z = getSeed();
 	if (m_w == 0) m_w = getSeed();
 	m_z = 36969L * (m_z & 65535L) + (m_z >> 16);
@@ -52,8 +51,7 @@ unsigned long getRandom()
 /*
  * Gets a random uint8_t value other than the current value
  */
-uint8_t getNextRandom(uint8_t max,int offset, uint8_t current)
-{
+uint8_t getNextRandom(uint8_t max,int offset, uint8_t current) {
 	uint8_t tmp;
 	do { tmp = clamp(((getRandom() % max) + offset)); } while (tmp ==  current);
 	return tmp;
